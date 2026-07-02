@@ -90,10 +90,14 @@ domus-scope/
 
 ## Status
 
-**Phase 0 complete** — monorepo scaffold, engine schemas (Zod), explanation-trace model,
-and the French amortization engine with golden, property-based (fast-check), and
-determinism tests, all green. Next step: Phase 1 — the quick engine with the derived
-threshold rule (see [`docs/05-roadmap.md`](docs/05-roadmap.md)).
+**Phase 1 complete** — on top of the Phase 0 scaffold (schemas, traces, amortization),
+the quick engine is done: `quickAssess()` with the derived threshold rule (R\* computed
+from the user's own assumptions, not a hardcoded 5%), simplified year-1 unrecoverable
+costs for rent/mortgage/cash with full explanation traces, provisional verdicts
+(BR-022 comparability cap), and the quick-level warnings catalog (W-001…W-006, W-009).
+The transcript golden vectors pass byte-exactly (8,800 € / 15,000 € / 12,000 €).
+Next step: Phase 2 — the full two-lens simulation engine
+(see [`docs/05-roadmap.md`](docs/05-roadmap.md)).
 
 ### Development
 

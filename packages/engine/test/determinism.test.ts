@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { aggregateByYear, buildAmortizationSchedule, fixedRate } from "../src";
+import {
+  aggregateByYear,
+  buildAmortizationSchedule,
+  defaultEngineConfig,
+  fixedRate,
+  quickAssess,
+  quickInputSchema,
+} from "../src";
 
 /**
  * TV-07 (NFR-002): identical inputs produce deeply equal outputs. The engine
@@ -15,5 +22,20 @@ describe("TV-07: determinism", () => {
 
     expect(second).toStrictEqual(first);
     expect(aggregateByYear(second, 30)).toStrictEqual(aggregateByYear(first, 30));
+  });
+
+  it("produces deeply equal quick assessments for identical inputs", () => {
+    const input = quickInputSchema.parse({
+      propertyPrice: 200_000,
+      equivalentMonthlyRent: 1_250,
+      horizonYears: 10,
+      financing: { kind: "mortgage", downPayment: 40_000, annualRate: 0.03, durationYears: 25 },
+      comparability: "medium",
+      liquidity: { available: 80_000, emergencyFund: 20_000 },
+    });
+
+    expect(quickAssess(input, defaultEngineConfig)).toStrictEqual(
+      quickAssess(input, defaultEngineConfig),
+    );
   });
 });

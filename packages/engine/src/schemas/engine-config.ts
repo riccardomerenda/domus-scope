@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { economicAssumptionsSchema, type EconomicAssumptions } from "./assumptions";
+import { fraction } from "./common";
 
 export const featureTogglesSchema = z.object({
   /** BR-011: disabling the opportunity-cost line always raises W-006. */
@@ -20,6 +21,14 @@ export const sanityBoundsSchema = z.object({
   maxRate: z.number(),
 });
 
+/** Everything that decides when a warning fires is configuration (§9). */
+export const warningThresholdsSchema = z.object({
+  /** BR-005: horizons shorter than this trigger W-003. */
+  shortHorizonYears: z.number().int().min(0).max(50),
+  /** W-005: LTV above this fraction warns that rate assumptions may be optimistic. */
+  highLtv: fraction,
+});
+
 export const engineConfigSchema = z.object({
   /** Grey band around the derived threshold R*, in rate points (§2). */
   greyBand: z.number().min(0).max(0.05),
@@ -27,12 +36,14 @@ export const engineConfigSchema = z.object({
   epsilon: z.number().positive(),
   toggles: featureTogglesSchema,
   sanityBounds: sanityBoundsSchema,
+  warningThresholds: warningThresholdsSchema,
   /** Engine-default assumption layer (lowest precedence, §9). */
   assumptions: economicAssumptionsSchema,
 });
 
 export type FeatureToggles = z.infer<typeof featureTogglesSchema>;
 export type SanityBounds = z.infer<typeof sanityBoundsSchema>;
+export type WarningThresholds = z.infer<typeof warningThresholdsSchema>;
 export type EngineConfig = z.infer<typeof engineConfigSchema>;
 
 /** The "Base" preset of the domain spec (§9) as the engine-default layer. */
@@ -57,5 +68,6 @@ export const defaultEngineConfig: EngineConfig = {
     liquidationBasis: true,
   },
   sanityBounds: { minRate: -0.1, maxRate: 0.15 },
+  warningThresholds: { shortHorizonYears: 3, highLtv: 0.8 },
   assumptions: defaultAssumptions,
 };

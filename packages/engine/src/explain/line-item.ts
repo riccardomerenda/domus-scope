@@ -16,7 +16,10 @@ export interface LineItem {
   id: string;
   /** Human-readable label. */
   label: string;
-  /** Amount in EUR, unrounded — the engine never rounds; presentation does (§10). */
+  /**
+   * Amount in EUR, signed: credits carry negative amounts so breakdown totals
+   * are plain sums. Unrounded — the engine never rounds; presentation does (§10).
+   */
   amount: number;
   /** Key into {@link formulaRegistry}. */
   formulaId: string;
@@ -24,6 +27,12 @@ export interface LineItem {
   inputs: Record<string, number | string>;
   lens: Lens;
   sign: Sign;
+}
+
+export interface CostBreakdown {
+  items: LineItem[];
+  /** Sum of item amounts (credits are negative). */
+  total: number;
 }
 
 export interface FormulaDescriptor {
@@ -58,5 +67,55 @@ export const formulaRegistry: Record<string, FormulaDescriptor> = {
     id: "mortgage.principal.month",
     expression: "principal_m = payment − interest_m",
     description: "The part of the payment that reduces debt and becomes net worth (BR-008).",
+  },
+  "quick.rentToPrice": {
+    id: "quick.rentToPrice",
+    expression: "R = (monthly_rent × 12) / price",
+    description: "Annual equivalent rent as a fraction of the property price.",
+  },
+  "quick.threshold.derived": {
+    id: "quick.threshold.derived",
+    expression: "R* = m% + tax% + LTV·i + (1 − LTV)·r_alt − g",
+    description:
+      "Derived quick-rule threshold (BR-018): maintenance + recurring taxes + blended cost " +
+      "of capital − expected home appreciation. The classic 5% emerges only under the " +
+      "assumptions that generate it.",
+  },
+  "quick.rent.year1": {
+    id: "quick.rent.year1",
+    expression: "rent_year1 = monthly_rent × 12",
+    description: "Simplified year-1 unrecoverable cost of the rent scenario.",
+  },
+  "quick.interest.simplified": {
+    id: "quick.interest.simplified",
+    expression: "interest_year1 ≈ P × i",
+    description:
+      "Simplified year-1 interest preview (critique W9). The exact amortization schedule " +
+      "yields slightly less because the balance declines during the year.",
+  },
+  "quick.opportunity": {
+    id: "quick.opportunity",
+    expression: "opportunity = invested_capital × r_alt",
+    description:
+      "Gross opportunity cost of the capital tied up in the purchase (BR-014). Always " +
+      "paired with the appreciation credit (BR-019).",
+  },
+  "quick.maintenance": {
+    id: "quick.maintenance",
+    expression: "maintenance = price × m%",
+    description: "Expected routine maintenance for year 1 (BR-010).",
+  },
+  "quick.recurringTax": {
+    id: "quick.recurringTax",
+    expression: "tax = price × tax%",
+    description:
+      "Recurring ownership taxes for year 1 (e.g. IMU; 0 for an Italian primary residence).",
+  },
+  "quick.appreciationCredit": {
+    id: "quick.appreciationCredit",
+    expression: "credit = −(price × g)",
+    description:
+      "Expected year-1 home value gain, shown as a negative line so the gross opportunity " +
+      "cost is never silently netted (critique W2, BR-019).",
   },
 };
