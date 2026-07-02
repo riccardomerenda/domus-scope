@@ -99,12 +99,52 @@ The transcript golden vectors pass byte-exactly (8,800 € / 15,000 € / 12,000
 Next step: Phase 2 — the full two-lens simulation engine
 (see [`docs/05-roadmap.md`](docs/05-roadmap.md)).
 
-### Development
+## Getting started
+
+### Prerequisites
+
+- **Node.js ≥ 22** (24.x works)
+- **pnpm ≥ 9** — if you don't have it: `npm install -g pnpm` (or `corepack enable pnpm`
+  in an elevated shell on Windows)
+
+### Setup and daily commands
 
 ```bash
-pnpm install     # once
-pnpm check       # typecheck + lint + test
-pnpm test        # engine test suite (golden + property + determinism)
+pnpm install     # install all workspace dependencies (once)
+pnpm check       # the full gate: typecheck + lint + test
+```
+
+| Command          | What it does                                              |
+| ---------------- | --------------------------------------------------------- |
+| `pnpm test`      | Engine test suite (golden + property-based + determinism) |
+| `pnpm typecheck` | TypeScript strict check across all packages               |
+| `pnpm lint`      | ESLint (type-checked rules)                               |
+| `pnpm format`    | Prettier over the whole repo                              |
+| `pnpm build`     | Compile packages to `dist/`                               |
+
+To work on a single package: `pnpm --filter @domus-scope/engine test` (add `--watch`
+via `pnpm --filter @domus-scope/engine exec vitest` for TDD).
+
+### Is there something to run yet?
+
+Not as an app: until Phase 3 this repository is a **domain engine library plus its test
+suite** — the test suite _is_ the executable specification. The web app (`apps/web`)
+arrives in Phase 3. You can already use the engine as a library, though:
+
+```ts
+import { quickAssess, quickInputSchema, defaultEngineConfig } from "@domus-scope/engine";
+
+const input = quickInputSchema.parse({
+  propertyPrice: 200_000,
+  equivalentMonthlyRent: 1_250,
+  horizonYears: 10,
+  financing: { kind: "mortgage", downPayment: 40_000, annualRate: 0.03, durationYears: 25 },
+});
+
+const result = quickAssess(input, defaultEngineConfig);
+console.log(result.rule.threshold); // derived R*, e.g. 0.0455 with default assumptions
+console.log(result.verdict.kind); // "BUY_MORTGAGE" | "BUY_CASH" | "RENT" | "GREY_ZONE"
+console.log(result.yearOne.mortgage?.items); // traced year-1 cost lines
 ```
 
 ## Disclaimer
