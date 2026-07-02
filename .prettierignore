@@ -1,0 +1,5 @@
+pnpm-lock.yaml
+.claude/
+dist/
+coverage/
+documento_progetto_app_dominio_immobiliare.md
