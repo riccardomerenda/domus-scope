@@ -90,21 +90,31 @@ domus-scope/
 
 ## Status
 
-**Phase 5 complete** — the app now answers the project's founding question, _"how
-fragile is this conclusion?"_. The engine gained `runSensitivity()`: one-at-a-time
-perturbations (rents, appreciation, returns, maintenance, mortgage rate, equivalent
-rent, horizon) with verdict-flip detection, a **fragility index** (Solid / Sensitive /
-Fragile), and the rent-growth × appreciation **verdict heatmap** — all deterministic and
-property-tested for economic monotonicity. In the app: the **Sensitivity tab** (fragility
-summary with the flipping variables called out, tornado of Δ-advantage with flip
-outlines, conservative/base/optimistic side-by-side, heatmap with legend), fragility
-badges on the **results banner and dashboard cards**, and the **Compare view** — up to
-four full-analysis scenarios side by side with aligned KPIs, overlaid advantage-per-year
-curves (separate validated 4-color palette), and an effective-assumptions table that
-highlights every difference. Everything before this (Phases 0–4: two-lens engine,
-Italian cost catalog, quick + analytical modes, explanation drawer, profile & presets,
-local-first storage) still holds; 73 tests green. Next: Phase 6 — decision journal,
-report/export, PWA polish (see [`docs/05-roadmap.md`](docs/05-roadmap.md)).
+**All six roadmap phases complete.** The blueprint question of the source document (§21)
+— _"given this house, this rent, this mortgage and my liquidity, when does buying beat
+renting, and how fragile is that conclusion?"_ — is answerable end-to-end, printable,
+and remembered:
+
+- **Engine** (Phases 0–2): derived-threshold quick rule, two-lens simulation (itemized
+  unrecoverable costs + budget-symmetric net-worth), Italian cost catalog, layered
+  assumptions with provenance, warnings W-001…W-009, `runSensitivity()` with fragility
+  index and verdict heatmap. Golden vectors from the source transcript pass byte-exactly;
+  property-based tests guard the amortization and simulation invariants.
+- **App** (Phases 3–5): Quick mode with live gauge and explanation drawer, full
+  analytical workspace (sectioned inputs, cost-catalog editor, results with five
+  CVD-validated charts and traceable year table, sensitivity tab), Compare view,
+  Profile & Assumptions with presets.
+- **Phase 6**: the **decision journal** (notes, visits, pros/cons, qualitative scores ×
+  personal weights → a preference index shown beside — never summed with — the euros),
+  the **decision record** that freezes the inputs it was based on, **snapshot history
+  with input diffs** ("why did the result change?"), the **print report** with
+  disclaimer and single-scenario JSON export, and **PWA** packaging (installable,
+  offline-capable). Storage schema v3 with cascading deletes; v1/v2 exports still
+  import.
+
+79 unit/component tests green plus a **Playwright smoke** that drives the whole journey
+in a real browser (create → verdict → full analysis → decision → reload → remembered):
+`pnpm --filter @domus-scope/web e2e`.
 
 Run it: `pnpm --filter @domus-scope/web dev` → http://localhost:5173
 

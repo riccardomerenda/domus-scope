@@ -7,8 +7,10 @@ import {
   type SimulationResult,
 } from "@domus-scope/engine";
 import { type FragilityRating } from "@domus-scope/engine";
+import { type QualitativeScores, type QualitativeWeights } from "../../../persistence/db";
 import { type SimulationOutcome } from "../../../lib/assess";
-import { formatEUR, formatEURSigned } from "../../../lib/format";
+import { FACTOR_LABELS, preferenceIndex } from "../../../lib/qualitative";
+import { formatEUR, formatEURSigned, formatNumber } from "../../../lib/format";
 import {
   Card,
   FragilityBadge,
@@ -30,12 +32,19 @@ import {
 } from "./charts";
 import { YearTable } from "./YearTable";
 
+export interface EpilogueData {
+  scores: QualitativeScores;
+  weights: QualitativeWeights;
+}
+
 export function ResultsPanel({
   outcome,
   fragility,
+  epilogue,
 }: {
   outcome: SimulationOutcome;
   fragility?: FragilityRating | undefined;
+  epilogue?: EpilogueData | undefined;
 }) {
   if (outcome.issues) {
     return (
@@ -52,17 +61,26 @@ export function ResultsPanel({
     );
   }
   if (!outcome.result || !outcome.input) return null;
-  return <Results result={outcome.result} input={outcome.input} fragility={fragility} />;
+  return (
+    <Results
+      result={outcome.result}
+      input={outcome.input}
+      fragility={fragility}
+      epilogue={epilogue}
+    />
+  );
 }
 
 function Results({
   result,
   input,
   fragility,
+  epilogue,
 }: {
   result: SimulationResult;
   input: NonNullable<SimulationOutcome["input"]>;
   fragility?: FragilityRating | undefined;
+  epilogue?: EpilogueData | undefined;
 }) {
   const [basis, setBasis] = useState<"hold" | "liquidation">(result.summary.basis);
   const [real, setReal] = useState(false);
@@ -299,6 +317,64 @@ function Results({
         basis={basis}
         real={real}
       />
+
+      {epilogue ? <Epilogue epilogue={epilogue} advantage={advantage} basis={basis} /> : null}
+    </div>
+  );
+}
+
+/** BR-015: financial delta and personal preference side by side, never summed. */
+function Epilogue({
+  epilogue,
+  advantage,
+  basis,
+}: {
+  epilogue: EpilogueData;
+  advantage: number;
+  basis: "hold" | "liquidation";
+}) {
+  const { index, scoredFactors } = preferenceIndex(epilogue.scores, epilogue.weights);
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      <Card className="p-4">
+        <h3 className="text-sm font-semibold text-ink">The numbers say</h3>
+        <p className="nums mt-2 text-xl font-semibold text-ink">{formatEURSigned(advantage)}</p>
+        <p className="mt-1 text-xs text-ink-3">
+          Net-worth advantage of buying at the horizon ({basis} basis). Positive favors buying.
+        </p>
+      </Card>
+      <Card className="p-4">
+        <h3 className="text-sm font-semibold text-ink">Your priorities say</h3>
+        {index !== null ? (
+          <>
+            <p className="nums mt-2 text-xl font-semibold text-ink">
+              {formatNumber(index, 0)} / 100
+            </p>
+            <div className="mt-2 space-y-1">
+              {scoredFactors.map((factor) => (
+                <div key={factor} className="flex items-center gap-2 text-xs">
+                  <span className="w-24 shrink-0 text-ink-3">{FACTOR_LABELS[factor]}</span>
+                  <div className="h-1.5 flex-1 rounded-full bg-hairline">
+                    <div
+                      className="h-1.5 rounded-full bg-ink-3"
+                      style={{ width: `${((epilogue.scores[factor] ?? 0) / 10) * 100}%` }}
+                    />
+                  </div>
+                  <span className="nums w-4 text-right text-ink-2">{epilogue.scores[factor]}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <p className="mt-2 text-sm text-ink-3">
+            Score the qualitative factors in the Journal tab to see your preference index.
+          </p>
+        )}
+        <p className="mt-2 text-xs text-ink-3">
+          Deliberately kept apart from the euros: stability and flexibility are real, but they are
+          yours to weigh — not the model's (BR-015).
+        </p>
+      </Card>
     </div>
   );
 }

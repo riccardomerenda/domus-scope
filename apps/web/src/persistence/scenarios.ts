@@ -56,7 +56,7 @@ export async function createScenario(title = "New scenario"): Promise<StoredScen
   const now = Date.now();
   const scenario: StoredScenario = {
     id: crypto.randomUUID(),
-    schemaVersion: 2,
+    schemaVersion: 3,
     title,
     archived: false,
     createdAt: now,
@@ -64,6 +64,7 @@ export async function createScenario(title = "New scenario"): Promise<StoredScen
     mode: "quick",
     quick: newQuickDefaults(),
     analytical: null,
+    qualitative: {},
   };
   await db.scenarios.add(scenario);
   return scenario;
@@ -71,7 +72,7 @@ export async function createScenario(title = "New scenario"): Promise<StoredScen
 
 export async function updateScenario(
   id: string,
-  patch: Partial<Pick<StoredScenario, "title" | "quick" | "analytical">>,
+  patch: Partial<Pick<StoredScenario, "title" | "quick" | "analytical" | "qualitative">>,
 ): Promise<void> {
   await db.scenarios.update(id, { ...patch, updatedAt: Date.now() });
 }
@@ -123,7 +124,12 @@ export async function setArchived(id: string, archived: boolean): Promise<void> 
 }
 
 export async function deleteScenario(id: string): Promise<void> {
-  await db.scenarios.delete(id);
+  // Cascade: journal entries and revisions belong to the scenario.
+  await db.transaction("rw", [db.scenarios, db.journal, db.revisions], async () => {
+    await db.journal.where("scenarioId").equals(id).delete();
+    await db.revisions.where("scenarioId").equals(id).delete();
+    await db.scenarios.delete(id);
+  });
 }
 
 export async function listScenarios(): Promise<StoredScenario[]> {

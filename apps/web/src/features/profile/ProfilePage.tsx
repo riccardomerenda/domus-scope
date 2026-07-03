@@ -8,11 +8,13 @@ import {
 } from "@domus-scope/engine";
 import {
   db,
-  defaultAppConfig,
+  mergeAppConfig,
   updateAppConfig,
+  QUALITATIVE_FACTORS,
   type AppConfig,
   type PartialAssumptions,
 } from "../../persistence/db";
+import { FACTOR_LABELS } from "../../lib/qualitative";
 import { formatPercent } from "../../lib/format";
 import { Button, Card, NumberField, PercentField } from "../../components/ui";
 import { CloseIcon, PlusIcon, TrashIcon } from "../../components/Icons";
@@ -30,7 +32,7 @@ const ASSUMPTION_FIELDS: { key: keyof EconomicAssumptions; label: string }[] = [
 export function ProfilePage() {
   const stored = useLiveQuery(() => db.appConfig.get("app"), []);
   if (stored === undefined) return null;
-  const config = stored ?? defaultAppConfig;
+  const config = mergeAppConfig(stored);
   return (
     <div className="max-w-2xl space-y-4">
       <div>
@@ -43,7 +45,44 @@ export function ProfilePage() {
       <ProfileCard config={config} />
       <GlobalAssumptionsCard config={config} />
       <PresetsCard config={config} />
+      <WeightsCard config={config} />
     </div>
+  );
+}
+
+function WeightsCard({ config }: { config: AppConfig }) {
+  const setWeight = (factor: (typeof QUALITATIVE_FACTORS)[number], value: number) =>
+    void updateAppConfig({
+      qualitativeWeights: { ...config.qualitativeWeights, [factor]: value },
+    });
+
+  return (
+    <Card className="p-4">
+      <h2 className="text-sm font-semibold text-ink">What matters to you (BR-015)</h2>
+      <p className="mt-1 text-xs text-ink-3">
+        Weights for the qualitative factors (0 = irrelevant, 10 = decisive). They shape the
+        preference index shown beside — never mixed with — the financial verdict.
+      </p>
+      <div className="mt-3 grid gap-x-6 gap-y-3 sm:grid-cols-2">
+        {QUALITATIVE_FACTORS.map((factor) => (
+          <label key={factor} className="block">
+            <span className="mb-1 flex items-center justify-between text-xs font-medium text-ink-2">
+              {FACTOR_LABELS[factor]}
+              <span className="nums text-ink-3">{config.qualitativeWeights[factor]}</span>
+            </span>
+            <input
+              type="range"
+              min={0}
+              max={10}
+              step={1}
+              value={config.qualitativeWeights[factor]}
+              onChange={(event) => setWeight(factor, Number(event.target.value))}
+              className="w-full accent-ink"
+            />
+          </label>
+        ))}
+      </div>
+    </Card>
   );
 }
 

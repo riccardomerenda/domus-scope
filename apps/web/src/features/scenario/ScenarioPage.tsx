@@ -4,7 +4,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { runSensitivity } from "@domus-scope/engine";
 import {
   db,
-  defaultAppConfig,
+  mergeAppConfig,
   type AnalyticalData,
   type QuickData,
   type StoredScenario,
@@ -17,6 +17,7 @@ import { ArrowRightIcon } from "../../components/Icons";
 import { QuickForm } from "./QuickForm";
 import { QuickResultsPanel } from "./QuickResultsPanel";
 import { InputsPanel } from "./analytical/InputsPanel";
+import { JournalPanel } from "./analytical/JournalPanel";
 import { ResultsPanel } from "./analytical/ResultsPanel";
 import { SensitivityPanel } from "./analytical/SensitivityPanel";
 
@@ -109,13 +110,13 @@ function AnalyticalWorkspace({ scenario }: { scenario: StoredScenario }) {
   const [data, setData] = useState<AnalyticalData>(
     () => scenario.analytical ?? quickToAnalytical(scenario.quick),
   );
-  const [tab, setTab] = useState<"inputs" | "results" | "sensitivity">("inputs");
+  const [tab, setTab] = useState<"inputs" | "results" | "sensitivity" | "journal">("inputs");
   useDebouncedSave(
     () => void updateScenario(scenario.id, { analytical: data }),
     [data, scenario.id],
   );
 
-  const appConfig = storedConfig ?? defaultAppConfig;
+  const appConfig = mergeAppConfig(storedConfig);
   const config = useMemo(() => engineConfigFor(appConfig), [appConfig]);
   const outcome = useMemo(
     () => runSimulation({ id: scenario.id, title: scenario.title }, data, appConfig),
@@ -131,25 +132,40 @@ function AnalyticalWorkspace({ scenario }: { scenario: StoredScenario }) {
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="w-96 max-w-full">
+        <div className="w-[30rem] max-w-full">
           <Segmented
             label="Workspace tab"
             options={[
               { value: "inputs", label: "Inputs" },
               { value: "results", label: "Results" },
               { value: "sensitivity", label: "Sensitivity" },
+              { value: "journal", label: "Journal" },
             ]}
             value={tab}
             onChange={setTab}
           />
         </div>
-        <Button onClick={() => void setMode(scenario.id, "quick")}>← Quick view</Button>
+        <div className="flex items-center gap-1">
+          <Link
+            to={`/scenario/${scenario.id}/report`}
+            className="rounded-lg px-3 py-1.5 text-sm font-medium text-ink-2 transition-colors hover:bg-hairline/60 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rent"
+          >
+            Report
+          </Link>
+          <Button onClick={() => void setMode(scenario.id, "quick")}>← Quick view</Button>
+        </div>
       </div>
 
       {tab === "inputs" ? (
         <InputsPanel data={data} onChange={setData} appConfig={appConfig} />
       ) : tab === "results" ? (
-        <ResultsPanel outcome={outcome} fragility={sensitivity?.fragility.rating} />
+        <ResultsPanel
+          outcome={outcome}
+          fragility={sensitivity?.fragility.rating}
+          epilogue={{ scores: scenario.qualitative, weights: appConfig.qualitativeWeights }}
+        />
+      ) : tab === "journal" ? (
+        <JournalPanel scenario={scenario} data={data} outcome={outcome} appConfig={appConfig} />
       ) : outcome.input && sensitivity ? (
         <SensitivityPanel sensitivity={sensitivity} input={outcome.input} config={config} />
       ) : (

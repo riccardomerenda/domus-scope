@@ -1,11 +1,18 @@
 import { z } from "zod";
 import { costItemSchema, economicAssumptionsSchema } from "@domus-scope/engine";
-import { db, type StoredScenario } from "./db";
+import {
+  db,
+  mergeAppConfig,
+  type AppConfig,
+  type JournalEntry,
+  type ScenarioRevision,
+  type StoredScenario,
+} from "./db";
 
 /**
- * Export/import (FR-017 groundwork). Import is additive and never overwrites:
- * colliding ids get a fresh id and a "(imported)" suffix. Version-1 export
- * files remain importable (migrated on the fly).
+ * Export/import (FR-017). Import is additive and never overwrites: colliding
+ * ids get fresh ids (journal entries and revisions are remapped accordingly).
+ * Version 1 and 2 export files remain importable, migrated on the fly.
  */
 
 const quickDataSchema = z.object({
@@ -47,26 +54,53 @@ const analyticalDataSchema = z.object({
   profileEnabled: z.boolean(),
 });
 
-const scenarioV1Schema = z.object({
+const qualitativeScoresSchema = z.object({
+  stability: z.number().min(0).max(10).optional(),
+  flexibility: z.number().min(0).max(10).optional(),
+  space: z.number().min(0).max(10).optional(),
+  school: z.number().min(0).max(10).optional(),
+  family: z.number().min(0).max(10).optional(),
+  work: z.number().min(0).max(10).optional(),
+});
+
+const qualitativeWeightsSchema = z.object({
+  stability: z.number().min(0).max(10),
+  flexibility: z.number().min(0).max(10),
+  space: z.number().min(0).max(10),
+  school: z.number().min(0).max(10),
+  family: z.number().min(0).max(10),
+  work: z.number().min(0).max(10),
+});
+
+const scenarioBaseFields = {
   id: z.string().min(1),
-  schemaVersion: z.literal(1),
   title: z.string().min(1),
   archived: z.boolean(),
   createdAt: z.number(),
   updatedAt: z.number(),
+} as const;
+
+const scenarioV1Schema = z.object({
+  ...scenarioBaseFields,
+  schemaVersion: z.literal(1),
   quick: quickDataSchema,
 });
 
 const scenarioV2Schema = z.object({
-  id: z.string().min(1),
+  ...scenarioBaseFields,
   schemaVersion: z.literal(2),
-  title: z.string().min(1),
-  archived: z.boolean(),
-  createdAt: z.number(),
-  updatedAt: z.number(),
   mode: z.enum(["quick", "analytical"]),
   quick: quickDataSchema,
   analytical: analyticalDataSchema.nullable(),
+});
+
+const scenarioV3Schema = z.object({
+  ...scenarioBaseFields,
+  schemaVersion: z.literal(3),
+  mode: z.enum(["quick", "analytical"]),
+  quick: quickDataSchema,
+  analytical: analyticalDataSchema.nullable(),
+  qualitative: qualitativeScoresSchema,
 });
 
 const appConfigSchema = z.object({
@@ -87,6 +121,29 @@ const appConfigSchema = z.object({
       values: economicAssumptionsSchema.partial(),
     }),
   ),
+  // Absent in v2 exports; normalized by mergeAppConfig on import.
+  qualitativeWeights: qualitativeWeightsSchema.optional(),
+});
+
+const journalEntrySchema = z.object({
+  id: z.string().min(1),
+  scenarioId: z.string().min(1),
+  createdAt: z.number(),
+  kind: z.enum(["note", "visit", "pro", "con", "decision"]),
+  text: z.string(),
+  decision: z.string().nullable(),
+  revisionId: z.string().nullable(),
+});
+
+const revisionSchema = z.object({
+  id: z.string().min(1),
+  scenarioId: z.string().min(1),
+  createdAt: z.number(),
+  label: z.string(),
+  title: z.string(),
+  mode: z.enum(["quick", "analytical"]),
+  quick: quickDataSchema,
+  analytical: analyticalDataSchema.nullable(),
 });
 
 const exportFileV1Schema = z.object({
@@ -104,12 +161,28 @@ const exportFileV2Schema = z.object({
   appConfig: appConfigSchema.nullable(),
 });
 
-export type ExportFile = z.infer<typeof exportFileV2Schema>;
+const exportFileV3Schema = z.object({
+  app: z.literal("domus-scope"),
+  schemaVersion: z.literal(3),
+  exportedAt: z.number(),
+  scenarios: z.array(scenarioV3Schema),
+  appConfig: appConfigSchema.nullable(),
+  journal: z.array(journalEntrySchema),
+  revisions: z.array(revisionSchema),
+});
+
+export type ExportFile = z.infer<typeof exportFileV3Schema>;
 
 export async function buildExport(): Promise<ExportFile> {
-  const scenarios = await db.scenarios.toArray();
-  const appConfig = (await db.appConfig.get("app")) ?? null;
-  return { app: "domus-scope", schemaVersion: 2, exportedAt: Date.now(), scenarios, appConfig };
+  return {
+    app: "domus-scope",
+    schemaVersion: 3,
+    exportedAt: Date.now(),
+    scenarios: await db.scenarios.toArray(),
+    appConfig: (await db.appConfig.get("app")) ?? null,
+    journal: await db.journal.toArray(),
+    revisions: await db.revisions.toArray(),
+  };
 }
 
 export interface ImportOutcome {
@@ -119,19 +192,44 @@ export interface ImportOutcome {
   error?: string;
 }
 
-function migrateV1(file: z.infer<typeof exportFileV1Schema>): ExportFile {
-  return {
-    app: "domus-scope",
-    schemaVersion: 2,
-    exportedAt: file.exportedAt,
-    appConfig: null,
-    scenarios: file.scenarios.map((scenario) => ({
-      ...scenario,
-      schemaVersion: 2 as const,
-      mode: "quick" as const,
-      analytical: null,
-    })),
-  };
+function parseExportFile(parsedJson: unknown): ExportFile | null {
+  const v3 = exportFileV3Schema.safeParse(parsedJson);
+  if (v3.success) return v3.data;
+
+  const v2 = exportFileV2Schema.safeParse(parsedJson);
+  if (v2.success) {
+    return {
+      ...v2.data,
+      schemaVersion: 3,
+      journal: [],
+      revisions: [],
+      scenarios: v2.data.scenarios.map((scenario) => ({
+        ...scenario,
+        schemaVersion: 3 as const,
+        qualitative: {},
+      })),
+    };
+  }
+
+  const v1 = exportFileV1Schema.safeParse(parsedJson);
+  if (v1.success) {
+    return {
+      app: "domus-scope",
+      schemaVersion: 3,
+      exportedAt: v1.data.exportedAt,
+      appConfig: null,
+      journal: [],
+      revisions: [],
+      scenarios: v1.data.scenarios.map((scenario) => ({
+        ...scenario,
+        schemaVersion: 3 as const,
+        mode: "quick" as const,
+        analytical: null,
+        qualitative: {},
+      })),
+    };
+  }
+  return null;
 }
 
 export async function importData(raw: unknown): Promise<ImportOutcome> {
@@ -149,23 +247,18 @@ export async function importData(raw: unknown): Promise<ImportOutcome> {
     }
   }
 
-  let file: ExportFile;
-  const v2 = exportFileV2Schema.safeParse(parsedJson);
-  if (v2.success) {
-    file = v2.data;
-  } else {
-    const v1 = exportFileV1Schema.safeParse(parsedJson);
-    if (!v1.success) {
-      return {
-        imported: 0,
-        renamed: 0,
-        configImported: false,
-        error: "The file is not a DomusScope export.",
-      };
-    }
-    file = migrateV1(v1.data);
+  const file = parseExportFile(parsedJson);
+  if (!file) {
+    return {
+      imported: 0,
+      renamed: 0,
+      configImported: false,
+      error: "The file is not a DomusScope export.",
+    };
   }
 
+  // Scenarios first; colliding ids get fresh ones and dependents are remapped.
+  const scenarioIdMap = new Map<string, string>();
   let renamed = 0;
   for (const scenario of file.scenarios) {
     const collision = await db.scenarios.get(scenario.id);
@@ -177,21 +270,62 @@ export async function importData(raw: unknown): Promise<ImportOutcome> {
           updatedAt: Date.now(),
         }
       : scenario;
+    scenarioIdMap.set(scenario.id, record.id);
     if (collision) renamed += 1;
     await db.scenarios.add(record);
+  }
+
+  // Revisions next (journal entries reference them). Always fresh ids.
+  const revisionIdMap = new Map<string, string>();
+  for (const revision of file.revisions) {
+    const scenarioId = scenarioIdMap.get(revision.scenarioId) ?? revision.scenarioId;
+    if (!(await db.scenarios.get(scenarioId))) continue; // orphan: skip
+    const record: ScenarioRevision = { ...revision, id: crypto.randomUUID(), scenarioId };
+    revisionIdMap.set(revision.id, record.id);
+    await db.revisions.add(record);
+  }
+  for (const entry of file.journal) {
+    const scenarioId = scenarioIdMap.get(entry.scenarioId) ?? entry.scenarioId;
+    if (!(await db.scenarios.get(scenarioId))) continue; // orphan: skip
+    const record: JournalEntry = {
+      ...entry,
+      id: crypto.randomUUID(),
+      scenarioId,
+      revisionId: entry.revisionId ? (revisionIdMap.get(entry.revisionId) ?? null) : null,
+    };
+    await db.journal.add(record);
   }
 
   // App config imports only when this device has none (never overwrite).
   let configImported = false;
   if (file.appConfig && !(await db.appConfig.get("app"))) {
-    await db.appConfig.put(file.appConfig);
+    await db.appConfig.put(mergeAppConfig(file.appConfig as AppConfig));
     configImported = true;
   }
 
   return { imported: file.scenarios.length, renamed, configImported };
 }
 
+/** Single-scenario export (US-013), including its journal and revisions. */
+export async function buildScenarioExport(scenarioId: string): Promise<ExportFile | null> {
+  const scenario = await db.scenarios.get(scenarioId);
+  if (!scenario) return null;
+  return {
+    app: "domus-scope",
+    schemaVersion: 3,
+    exportedAt: Date.now(),
+    scenarios: [scenario],
+    appConfig: null,
+    journal: await db.journal.where("scenarioId").equals(scenarioId).toArray(),
+    revisions: await db.revisions.where("scenarioId").equals(scenarioId).toArray(),
+  };
+}
+
 export async function wipeAllData(): Promise<void> {
-  await db.scenarios.clear();
-  await db.appConfig.clear();
+  await db.transaction("rw", [db.scenarios, db.appConfig, db.journal, db.revisions], async () => {
+    await db.scenarios.clear();
+    await db.appConfig.clear();
+    await db.journal.clear();
+    await db.revisions.clear();
+  });
 }

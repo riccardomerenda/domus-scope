@@ -8,6 +8,7 @@ import { ExplainProvider } from "./features/explain/ExplainContext";
 import { ComparePage } from "./features/compare/ComparePage";
 import { DashboardPage } from "./features/dashboard/DashboardPage";
 import { ProfilePage } from "./features/profile/ProfilePage";
+import { ReportPage } from "./features/report/ReportPage";
 import { ScenarioPage } from "./features/scenario/ScenarioPage";
 import { SettingsPage } from "./features/settings/SettingsPage";
 
@@ -27,6 +28,8 @@ createRoot(container).render(
               <Route path="profile" element={<ProfilePage />} />
               <Route path="settings" element={<SettingsPage />} />
             </Route>
+            {/* Print-optimized, rendered without the app shell. */}
+            <Route path="scenario/:id/report" element={<ReportPage />} />
           </Routes>
         </BrowserRouter>
       </ExplainProvider>

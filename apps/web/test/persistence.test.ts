@@ -100,8 +100,9 @@ describe("export / import (local-first data safety)", () => {
     expect(outcome.imported).toBe(1);
 
     const migrated = await db.scenarios.get("legacy-1");
-    expect(migrated?.schemaVersion).toBe(2);
+    expect(migrated?.schemaVersion).toBe(3);
     expect(migrated?.mode).toBe("quick");
     expect(migrated?.analytical).toBeNull();
+    expect(migrated?.qualitative).toEqual({});
   });
 });

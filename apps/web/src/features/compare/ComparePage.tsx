@@ -13,7 +13,7 @@ import {
   YAxis,
 } from "recharts";
 import { defaultAssumptions, type EconomicAssumptions } from "@domus-scope/engine";
-import { db, defaultAppConfig, type StoredScenario } from "../../persistence/db";
+import { db, mergeAppConfig, type StoredScenario } from "../../persistence/db";
 import { runSimulation, type SimulationOutcome } from "../../lib/assess";
 import { formatEUR, formatEURSigned, formatPercent } from "../../lib/format";
 import { Card, LensTag, ToggleField, VerdictChip, VERDICT_META } from "../../components/ui";
@@ -30,8 +30,8 @@ interface ComparedScenario {
 export function ComparePage() {
   const scenarios = useLiveQuery(() => db.scenarios.orderBy("updatedAt").reverse().toArray(), []);
   const appConfig =
-    useLiveQuery(async () => (await db.appConfig.get("app")) ?? defaultAppConfig, []) ??
-    defaultAppConfig;
+    useLiveQuery(async () => mergeAppConfig(await db.appConfig.get("app")), []) ??
+    mergeAppConfig(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const compared = useMemo<ComparedScenario[]>(() => {

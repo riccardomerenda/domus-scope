@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
 import { runSensitivity, type FragilityRating } from "@domus-scope/engine";
-import { db, defaultAppConfig, type AppConfig, type StoredScenario } from "../../persistence/db";
+import { db, mergeAppConfig, type AppConfig, type StoredScenario } from "../../persistence/db";
 import {
   createScenario,
   deleteScenario,
@@ -27,8 +27,8 @@ export function DashboardPage() {
   const [showArchived, setShowArchived] = useState(false);
   const scenarios = useLiveQuery(() => db.scenarios.orderBy("updatedAt").reverse().toArray(), []);
   const appConfig =
-    useLiveQuery(async () => (await db.appConfig.get("app")) ?? defaultAppConfig, []) ??
-    defaultAppConfig;
+    useLiveQuery(async () => mergeAppConfig(await db.appConfig.get("app")), []) ??
+    mergeAppConfig(null);
 
   if (!scenarios) return null;
   const visible = scenarios.filter((scenario) => scenario.archived === showArchived);
