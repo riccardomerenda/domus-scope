@@ -56,7 +56,7 @@ DomusScope evaluates every scenario through **two complementary lenses**:
 | UI            | React 19 + Vite                       | Mature ecosystem for forms, charts, components           |
 | Styling       | Tailwind CSS v4 + Radix UI primitives | Modern, accessible, fast to build a polished UI          |
 | Charts        | Recharts                              | Declarative, fits the required chart set                 |
-| State         | Zustand                               | Minimal, explicit stores                                 |
+| State         | Dexie live queries + React state      | Stored data is the single source of truth                |
 | Persistence   | IndexedDB via Dexie                   | Local-first, schema-versioned, migratable                |
 | Validation    | Zod                                   | Schemas double as domain validation and config contracts |
 | Testing       | Vitest + fast-check + Testing Library | Golden tests, property-based invariants                  |
@@ -80,13 +80,14 @@ domus-scope/
 
 ## Documentation
 
-| Document                                             | Content                                                                                                              |
-| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| [`docs/01-critique.md`](docs/01-critique.md)         | Critical review of the source domain document: validated strengths, weaknesses, gaps                                 |
-| [`docs/02-domain-spec.md`](docs/02-domain-spec.md)   | Refined domain specification: methodology, corrected formulas, input/output catalogs, validation rules, test vectors |
-| [`docs/03-architecture.md`](docs/03-architecture.md) | Stack decision, monorepo layout, engine design, configuration system, persistence, testing strategy                  |
-| [`docs/04-ui-design.md`](docs/04-ui-design.md)       | Information architecture, screens, design language, chart set, component inventory                                   |
-| [`docs/05-roadmap.md`](docs/05-roadmap.md)           | Phased implementation plan with milestones, tasks, and acceptance criteria                                           |
+| Document                                               | Content                                                                                                              |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| [`docs/01-critique.md`](docs/01-critique.md)           | Critical review of the source domain document: validated strengths, weaknesses, gaps                                 |
+| [`docs/02-domain-spec.md`](docs/02-domain-spec.md)     | Refined domain specification: methodology, corrected formulas, input/output catalogs, validation rules, test vectors |
+| [`docs/03-architecture.md`](docs/03-architecture.md)   | Stack decision, monorepo layout, engine design, configuration system, persistence, testing strategy                  |
+| [`docs/04-ui-design.md`](docs/04-ui-design.md)         | Information architecture, screens, design language, chart set, component inventory                                   |
+| [`docs/05-roadmap.md`](docs/05-roadmap.md)             | Phased implementation plan with milestones, tasks, and acceptance criteria                                           |
+| [`docs/06-testing-guide.md`](docs/06-testing-guide.md) | Hands-on guide: setup in three commands + a guided tour of every feature                                             |
 
 ## Status
 
@@ -120,35 +121,46 @@ Run it: `pnpm --filter @domus-scope/web dev` → http://localhost:5173
 
 ## Getting started
 
+**Just want to try the app?** Follow the
+[**testing guide**](docs/06-testing-guide.md) — setup in three commands plus a guided
+tour of every feature.
+
 ### Prerequisites
 
-- **Node.js ≥ 22** (24.x works)
+- **Node.js ≥ 22** (24.x works) — https://nodejs.org
 - **pnpm ≥ 9** — if you don't have it: `npm install -g pnpm` (or `corepack enable pnpm`
   in an elevated shell on Windows)
 
-### Setup and daily commands
+### Run the app
 
 ```bash
-pnpm install     # install all workspace dependencies (once)
-pnpm check       # the full gate: typecheck + lint + test
+pnpm install                          # once
+pnpm --filter @domus-scope/web dev    # dev server → http://localhost:5173
 ```
 
-| Command          | What it does                                              |
-| ---------------- | --------------------------------------------------------- |
-| `pnpm test`      | Engine test suite (golden + property-based + determinism) |
-| `pnpm typecheck` | TypeScript strict check across all packages               |
-| `pnpm lint`      | ESLint (type-checked rules)                               |
-| `pnpm format`    | Prettier over the whole repo                              |
-| `pnpm build`     | Compile packages to `dist/`                               |
+Production build + preview (what the PWA ships):
 
-To work on a single package: `pnpm --filter @domus-scope/engine test` (add `--watch`
-via `pnpm --filter @domus-scope/engine exec vitest` for TDD).
+```bash
+pnpm --filter @domus-scope/web build
+pnpm --filter @domus-scope/web preview   # → http://localhost:4173
+```
 
-### Is there something to run yet?
+All data stays in the browser's IndexedDB on your machine — there is no server.
 
-Not as an app: until Phase 3 this repository is a **domain engine library plus its test
-suite** — the test suite _is_ the executable specification. The web app (`apps/web`)
-arrives in Phase 3. You can already use the engine as a library, though:
+### Development commands
+
+| Command                              | What it does                                                                  |
+| ------------------------------------ | ----------------------------------------------------------------------------- |
+| `pnpm check`                         | The full gate: typecheck + lint + all unit/component tests                    |
+| `pnpm test`                          | Engine + web test suites (golden, property-based, components)                 |
+| `pnpm --filter @domus-scope/web e2e` | Playwright smoke in a real browser (needs `playwright install chromium` once) |
+| `pnpm typecheck` / `pnpm lint`       | TypeScript strict check / ESLint (type-checked rules)                         |
+| `pnpm format`                        | Prettier over the whole repo                                                  |
+
+To work on a single package: `pnpm --filter @domus-scope/engine test` (add watch mode
+via `pnpm --filter @domus-scope/engine exec vitest`).
+
+### Using the engine as a library
 
 ```ts
 import { quickAssess, quickInputSchema, defaultEngineConfig } from "@domus-scope/engine";
