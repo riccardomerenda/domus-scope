@@ -25,6 +25,11 @@
   --ds-warning: #fab219;
   --ds-serious: #ec835a;
   --ds-critical: #d03b3b;
+  /* Ordinal ramp (blue sequential steps) for composition charts. */
+  --ds-seq-1: #1c5cab;
+  --ds-seq-2: #3987e5;
+  --ds-seq-3: #6da7ec;
+  --ds-seq-4: #9ec5f4;
 }
 .dark {
   --ds-page: #0d0d0d;
@@ -39,6 +44,11 @@
   --ds-buy: #199e70;
   --ds-cash: #9085e9;
   --ds-greyzone: #898781;
+  /* Reversed lightness so the first step keeps the highest contrast on dark. */
+  --ds-seq-1: #9ec5f4;
+  --ds-seq-2: #6da7ec;
+  --ds-seq-3: #3987e5;
+  --ds-seq-4: #1c5cab;
 }
 
 @theme inline {

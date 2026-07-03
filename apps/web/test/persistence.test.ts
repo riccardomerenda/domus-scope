@@ -75,4 +75,33 @@ describe("export / import (local-first data safety)", () => {
     expect((await importData("not json")).error).toBeTruthy();
     expect((await importData(JSON.stringify({ app: "other" }))).error).toBeTruthy();
   });
+
+  it("still imports version-1 export files (migrated on the fly)", async () => {
+    const v1File = {
+      app: "domus-scope",
+      schemaVersion: 1,
+      exportedAt: Date.now(),
+      scenarios: [
+        {
+          id: "legacy-1",
+          schemaVersion: 1,
+          title: "Legacy scenario",
+          archived: false,
+          createdAt: 1,
+          updatedAt: 2,
+          quick: (await createScenario("tmp")).quick,
+        },
+      ],
+    };
+    await db.scenarios.clear();
+
+    const outcome = await importData(JSON.stringify(v1File));
+    expect(outcome.error).toBeUndefined();
+    expect(outcome.imported).toBe(1);
+
+    const migrated = await db.scenarios.get("legacy-1");
+    expect(migrated?.schemaVersion).toBe(2);
+    expect(migrated?.mode).toBe("quick");
+    expect(migrated?.analytical).toBeNull();
+  });
 });

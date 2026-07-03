@@ -119,6 +119,60 @@ export function ToggleField({
   );
 }
 
+/** Displays a stored fraction (0.034) as a percent number (3.4) without float dust. */
+export function toPercentDisplay(fraction: number): number {
+  return Math.round(fraction * 10_000) / 100;
+}
+
+export function PercentField({
+  label,
+  value,
+  onChange,
+  step = 0.05,
+  min = 0,
+}: {
+  label: string;
+  /** Fraction, engine-style: 0.034 = 3.4%. */
+  value: number;
+  onChange: (fraction: number) => void;
+  step?: number;
+  min?: number;
+}) {
+  return (
+    <NumberField
+      label={label}
+      suffix="%"
+      value={Number.isFinite(value) ? toPercentDisplay(value) : Number.NaN}
+      step={step}
+      min={min}
+      onChange={(percent) => onChange(percent / 100)}
+    />
+  );
+}
+
+/* ---------- Stat tile ---------- */
+
+export function StatTile({
+  label,
+  value,
+  sub,
+  tone = "default",
+}: {
+  label: string;
+  value: string;
+  sub?: string | undefined;
+  tone?: "default" | "good" | "bad";
+}) {
+  const valueClass = tone === "good" ? "text-good" : tone === "bad" ? "text-critical" : "text-ink";
+  return (
+    <div className="rounded-xl border border-edge bg-surface p-3">
+      <div className="text-[11px] font-medium text-ink-3">{label}</div>
+      <div className={`mt-1 text-lg font-semibold ${valueClass}`}>{value}</div>
+      {sub ? <div className="nums mt-0.5 text-[11px] text-ink-3">{sub}</div> : null}
+    </div>
+  );
+}
+
 /* ---------- Segmented control ---------- */
 
 export function Segmented<T extends string>({

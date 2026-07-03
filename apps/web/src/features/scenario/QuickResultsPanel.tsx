@@ -1,7 +1,7 @@
 import { type CostBreakdown, type QuickResult } from "@domus-scope/engine";
 import { type Assessment } from "../../lib/assess";
 import { formatEUR } from "../../lib/format";
-import { Card, LensTag, VerdictChip, WarningBadge, VERDICT_META } from "../../components/ui";
+import { Card, LensTag, VerdictChip, WarningBadge } from "../../components/ui";
 import { ExplainableNumber } from "../explain/ExplainableNumber";
 import { useExplain } from "../explain/ExplainContext";
 import { RuleGauge } from "./RuleGauge";
@@ -121,9 +121,8 @@ function Results({ result }: { result: QuickResult }) {
       ) : null}
 
       <p className="text-[11px] leading-relaxed text-ink-3">
-        Quick mode is a first screening ({VERDICT_META[result.verdict.kind].label} is not advice).
-        The full multi-year analysis — break-evens, net-worth simulation, sensitivity — arrives with
-        the analytical mode.
+        Quick mode is a first screening, not advice. Use “Deepen with full analysis” for the
+        multi-year two-lens simulation: break-evens, net worth, cost catalog, real terms.
       </p>
     </div>
   );

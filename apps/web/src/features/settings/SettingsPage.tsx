@@ -85,8 +85,9 @@ export function SettingsPage() {
               ? importOutcome.error
               : `Imported ${importOutcome.imported} scenario(s)` +
                 (importOutcome.renamed > 0
-                  ? `, ${importOutcome.renamed} renamed to avoid collisions.`
-                  : ".")}
+                  ? `, ${importOutcome.renamed} renamed to avoid collisions`
+                  : "") +
+                (importOutcome.configImported ? ", profile & assumptions restored." : ".")}
           </p>
         ) : null}
       </Card>
@@ -94,7 +95,8 @@ export function SettingsPage() {
       <Card className="border-critical/30 p-4">
         <h2 className="text-sm font-semibold text-critical">Danger zone</h2>
         <p className="mt-1 text-sm text-ink-2">
-          Permanently delete every scenario stored on this device.
+          Permanently delete every scenario, your profile, and the global assumptions stored on this
+          device.
         </p>
         <Button variant="danger" className="mt-3" onClick={() => setConfirmWipe(true)}>
           <TrashIcon /> Delete all data

@@ -1,4 +1,12 @@
-import { db, type QuickData, type StoredScenario } from "./db";
+import { assumptionPresets } from "@domus-scope/engine";
+import {
+  db,
+  defaultAppConfig,
+  type AnalyticalData,
+  type QuickData,
+  type ScenarioMode,
+  type StoredScenario,
+} from "./db";
 
 export function newQuickDefaults(): QuickData {
   return {
@@ -17,16 +25,45 @@ export function newQuickDefaults(): QuickData {
   };
 }
 
+/** Seeds the analytical form from the quick form (first upgrade only). */
+export function quickToAnalytical(quick: QuickData): AnalyticalData {
+  return {
+    property: {
+      price: quick.propertyPrice,
+      cadastralValue: null,
+      zone: "",
+      sizeSqm: null,
+      notes: "",
+    },
+    financingKind: quick.financingKind,
+    downPayment: quick.downPayment,
+    annualRate: quick.annualRate,
+    durationYears: quick.durationYears,
+    rentAlternative: {
+      equivalentMonthlyRent: quick.equivalentMonthlyRent,
+      currentMonthlyRent: null,
+      comparability: quick.comparability,
+    },
+    costItems: [],
+    assumptions: { ...assumptionPresets[quick.assumptionPreset].values },
+    horizonYears: quick.horizonYears,
+    sellingCostRate: 0.0366,
+    profileEnabled: true,
+  };
+}
+
 export async function createScenario(title = "New scenario"): Promise<StoredScenario> {
   const now = Date.now();
   const scenario: StoredScenario = {
     id: crypto.randomUUID(),
-    schemaVersion: 1,
+    schemaVersion: 2,
     title,
     archived: false,
     createdAt: now,
     updatedAt: now,
+    mode: "quick",
     quick: newQuickDefaults(),
+    analytical: null,
   };
   await db.scenarios.add(scenario);
   return scenario;
@@ -34,9 +71,35 @@ export async function createScenario(title = "New scenario"): Promise<StoredScen
 
 export async function updateScenario(
   id: string,
-  patch: Partial<Pick<StoredScenario, "title" | "quick">>,
+  patch: Partial<Pick<StoredScenario, "title" | "quick" | "analytical">>,
 ): Promise<void> {
   await db.scenarios.update(id, { ...patch, updatedAt: Date.now() });
+}
+
+/**
+ * Switches the scenario mode. The first upgrade to analytical seeds the form
+ * from the quick inputs and — if the user filled the quick liquidity check but
+ * has no stored profile yet — seeds the global profile from it too.
+ */
+export async function setMode(id: string, mode: ScenarioMode): Promise<void> {
+  const scenario = await db.scenarios.get(id);
+  if (!scenario) return;
+
+  let analytical = scenario.analytical;
+  if (mode === "analytical" && analytical === null) {
+    analytical = quickToAnalytical(scenario.quick);
+    if (scenario.quick.liquidityEnabled && !(await db.appConfig.get("app"))) {
+      await db.appConfig.put({
+        ...defaultAppConfig,
+        profile: {
+          ...defaultAppConfig.profile,
+          liquidity: scenario.quick.liquidityAvailable,
+          emergencyFund: scenario.quick.emergencyFund,
+        },
+      });
+    }
+  }
+  await db.scenarios.update(id, { mode, analytical, updatedAt: Date.now() });
 }
 
 export async function duplicateScenario(id: string): Promise<StoredScenario | undefined> {
@@ -44,13 +107,12 @@ export async function duplicateScenario(id: string): Promise<StoredScenario | un
   if (!original) return undefined;
   const now = Date.now();
   const copy: StoredScenario = {
-    ...original,
+    ...structuredClone(original),
     id: crypto.randomUUID(),
     title: `${original.title} (copy)`,
     archived: false,
     createdAt: now,
     updatedAt: now,
-    quick: { ...original.quick },
   };
   await db.scenarios.add(copy);
   return copy;

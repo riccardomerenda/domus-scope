@@ -1,22 +1,32 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
-import { db, type StoredScenario } from "../../persistence/db";
+import { db, defaultAppConfig, type AppConfig, type StoredScenario } from "../../persistence/db";
 import {
   createScenario,
   deleteScenario,
   duplicateScenario,
   setArchived,
 } from "../../persistence/scenarios";
-import { assessQuickData } from "../../lib/assess";
-import { formatDate, formatEUR, formatPercent } from "../../lib/format";
-import { Button, Card, ConfirmDialog, ToggleField, VerdictChip } from "../../components/ui";
+import { assessQuickData, runSimulation } from "../../lib/assess";
+import { formatDate, formatEUR, formatEURSigned, formatPercent } from "../../lib/format";
+import {
+  Button,
+  Card,
+  ConfirmDialog,
+  LensTag,
+  ToggleField,
+  VerdictChip,
+} from "../../components/ui";
 import { ArchiveIcon, CopyIcon, PlusIcon, RestoreIcon, TrashIcon } from "../../components/Icons";
 
 export function DashboardPage() {
   const navigate = useNavigate();
   const [showArchived, setShowArchived] = useState(false);
   const scenarios = useLiveQuery(() => db.scenarios.orderBy("updatedAt").reverse().toArray(), []);
+  const appConfig =
+    useLiveQuery(async () => (await db.appConfig.get("app")) ?? defaultAppConfig, []) ??
+    defaultAppConfig;
 
   if (!scenarios) return null;
   const visible = scenarios.filter((scenario) => scenario.archived === showArchived);
@@ -55,7 +65,7 @@ export function DashboardPage() {
       ) : (
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           {visible.map((scenario) => (
-            <ScenarioCard key={scenario.id} scenario={scenario} />
+            <ScenarioCard key={scenario.id} scenario={scenario} appConfig={appConfig} />
           ))}
         </div>
       )}
@@ -83,11 +93,66 @@ function EmptyState({ archivedView, onCreate }: { archivedView: boolean; onCreat
   );
 }
 
-function ScenarioCard({ scenario }: { scenario: StoredScenario }) {
-  const navigate = useNavigate();
-  const [confirmDelete, setConfirmDelete] = useState(false);
+interface CardSummary {
+  verdictKind: VerdictKindOf | undefined;
+  indicative: boolean;
+  price: number;
+  rent: number;
+  rows: { label: string; value: string }[];
+  invalid: boolean;
+}
+
+type VerdictKindOf = Parameters<typeof VerdictChip>[0]["kind"];
+
+function summarize(scenario: StoredScenario, appConfig: AppConfig): CardSummary {
+  if (scenario.mode === "analytical" && scenario.analytical) {
+    const data = scenario.analytical;
+    const outcome = runSimulation({ id: scenario.id, title: scenario.title }, data, appConfig);
+    const last = outcome.result?.wealthLens.years.at(-1);
+    return {
+      verdictKind: outcome.result?.verdict.kind,
+      indicative: outcome.result?.verdict.strength === "indicative",
+      price: data.property.price,
+      rent: data.rentAlternative.equivalentMonthlyRent,
+      invalid: !outcome.result,
+      rows: outcome.result
+        ? [
+            {
+              label: `Δ @ ${data.horizonYears}y`,
+              value: formatEURSigned(last?.advantageLiquidation ?? 0),
+            },
+            {
+              label: "BE wealth",
+              value:
+                outcome.result.breakEvens.wealthLiquidation !== null
+                  ? `year ${outcome.result.breakEvens.wealthLiquidation}`
+                  : "beyond",
+            },
+          ]
+        : [],
+    };
+  }
   const assessment = assessQuickData(scenario.quick);
   const rule = assessment.result?.rule;
+  return {
+    verdictKind: assessment.result?.verdict.kind,
+    indicative: assessment.result?.verdict.strength === "indicative",
+    price: scenario.quick.propertyPrice,
+    rent: scenario.quick.equivalentMonthlyRent,
+    invalid: !assessment.result,
+    rows: rule
+      ? [
+          { label: "R", value: formatPercent(rule.rentToPrice, 1) },
+          { label: "R*", value: formatPercent(rule.threshold, 1) },
+        ]
+      : [],
+  };
+}
+
+function ScenarioCard({ scenario, appConfig }: { scenario: StoredScenario; appConfig: AppConfig }) {
+  const navigate = useNavigate();
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const summary = summarize(scenario, appConfig);
 
   return (
     <Card className="group relative p-4 transition-shadow hover:shadow-md">
@@ -97,12 +162,12 @@ function ScenarioCard({ scenario }: { scenario: StoredScenario }) {
         onClick={() => void navigate(`/scenario/${scenario.id}`)}
       >
         <div className="flex items-start justify-between gap-2">
-          <h3 className="font-medium text-ink">{scenario.title}</h3>
-          {assessment.result ? (
-            <VerdictChip
-              kind={assessment.result.verdict.kind}
-              indicative={assessment.result.verdict.strength === "indicative"}
-            />
+          <div className="flex min-w-0 items-center gap-2">
+            <h3 className="truncate font-medium text-ink">{scenario.title}</h3>
+            {scenario.mode === "analytical" ? <LensTag>full</LensTag> : null}
+          </div>
+          {summary.verdictKind && !summary.invalid ? (
+            <VerdictChip kind={summary.verdictKind} indicative={summary.indicative} />
           ) : (
             <span className="text-xs text-critical">invalid inputs</span>
           )}
@@ -110,24 +175,18 @@ function ScenarioCard({ scenario }: { scenario: StoredScenario }) {
         <dl className="nums mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
           <div className="flex justify-between">
             <dt className="text-ink-3">Price</dt>
-            <dd className="text-ink-2">{formatEUR(scenario.quick.propertyPrice)}</dd>
+            <dd className="text-ink-2">{formatEUR(summary.price)}</dd>
           </div>
           <div className="flex justify-between">
             <dt className="text-ink-3">Rent</dt>
-            <dd className="text-ink-2">{formatEUR(scenario.quick.equivalentMonthlyRent)}/mo</dd>
+            <dd className="text-ink-2">{formatEUR(summary.rent)}/mo</dd>
           </div>
-          {rule ? (
-            <>
-              <div className="flex justify-between">
-                <dt className="text-ink-3">R</dt>
-                <dd className="text-ink-2">{formatPercent(rule.rentToPrice, 1)}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-ink-3">R*</dt>
-                <dd className="text-ink-2">{formatPercent(rule.threshold, 1)}</dd>
-              </div>
-            </>
-          ) : null}
+          {summary.rows.map((row) => (
+            <div key={row.label} className="flex justify-between">
+              <dt className="text-ink-3">{row.label}</dt>
+              <dd className="text-ink-2">{row.value}</dd>
+            </div>
+          ))}
         </dl>
         <p className="mt-3 text-[11px] text-ink-3">Updated {formatDate(scenario.updatedAt)}</p>
       </button>

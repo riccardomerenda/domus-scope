@@ -90,17 +90,24 @@ domus-scope/
 
 ## Status
 
-**Phase 3 complete** — the web app MVP is live on top of the finished analytical engine
-(Phases 0–2: quick rule with derived threshold, two-lens `simulate()`, Italian cost
-presets, layered assumptions with provenance, 45 engine tests including the frozen
-reference snapshot). The app (`apps/web`, Vite + React 19 + Tailwind v4, local-first
-via IndexedDB) ships: scenario CRUD with dashboard cards and archive, the Quick-mode
-screen with live results (derived-threshold gauge, three-bar year-1 comparison with
-validated CVD-safe colors, itemized breakdowns, warnings), the **explanation drawer** —
-click any number to see its formula, resolved inputs, and lens — assumption presets,
-light/dark themes, and JSON export/import in Settings. 11 web tests cover the repository
-and the quick flow end-to-end (verdicts, drawer, warnings, persistence). Playwright
-smoke tests are deferred to Phase 4. Next: Phase 4 — the analytical mode UI
+**Phase 4 complete** — the analytical mode is fully usable end-to-end (source-doc flow
+11.2). On top of the engine (Phases 0–2) and the Quick-mode MVP (Phase 3), the app now
+ships: one-click **upgrade from Quick to full analysis** (data seeded, mode switchable
+back); the sectioned **Inputs screen** — property, editable **cost catalog** (Italian
+presets generated from the scenario's own numbers + a full custom-item editor with
+one-time/recurring timing, percent bases, recoverability), financing with live exact
+payment preview, rent alternative, **assumptions with per-value provenance**
+(engine-default / global / scenario) and preset chips, horizon & selling costs, and the
+liquidity check against the global profile; the **Results screen** — verdict banner with
+advantage at horizon and warnings (FR-015), KPI tiles, hold/liquidation and
+nominal/real toggles, the five charts (cumulative unrecoverable costs, net worth,
+**sell-at-year-t advantage**, mortgage anatomy, buy-side cost composition, all
+CVD-validated colors with hover tooltips), wealth compositions at horizon, and the
+expandable **year table** whose line items all open the explanation drawer; plus the
+**Profile & Assumptions** page (personal profile, global assumption layer with
+provenance, built-in + user presets). Storage migrated to schema v2 (v1 exports still
+import). 63 tests green across the workspace. Playwright smoke remains deferred
+(component tests cover both flows). Next: Phase 5 — sensitivity & comparison
 (see [`docs/05-roadmap.md`](docs/05-roadmap.md)).
 
 Run it: `pnpm --filter @domus-scope/web dev` → http://localhost:5173
