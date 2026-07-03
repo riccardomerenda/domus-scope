@@ -90,14 +90,18 @@ domus-scope/
 
 ## Status
 
-**Phase 1 complete** — on top of the Phase 0 scaffold (schemas, traces, amortization),
-the quick engine is done: `quickAssess()` with the derived threshold rule (R\* computed
-from the user's own assumptions, not a hardcoded 5%), simplified year-1 unrecoverable
-costs for rent/mortgage/cash with full explanation traces, provisional verdicts
-(BR-022 comparability cap), and the quick-level warnings catalog (W-001…W-006, W-009).
-The transcript golden vectors pass byte-exactly (8,800 € / 15,000 € / 12,000 €).
-Next step: Phase 2 — the full two-lens simulation engine
-(see [`docs/05-roadmap.md`](docs/05-roadmap.md)).
+**Phase 2 complete** — the analytical engine is done. `simulate()` runs both lenses over
+the full horizon: the Cost lens (itemized unrecoverable costs with gross opportunity cost
+paired to the appreciation credit, exact mortgage interest, the Italian interest tax
+credit, hold and liquidation bases) and the Wealth lens (budget-symmetric monthly
+simulation with capital-gains tax, the `advantage_t` curve, four break-evens). The cost
+catalog resolves declarative `CostItem`s and ships editable Italian presets (registration
+tax, notary, agency, imposta sostitutiva, deposit, renovation with partial
+recoverability…). Assumptions resolve through three layers (engine defaults → global →
+scenario) with per-value provenance. Verdicts carry ranked reasons and a fragility-ready
+structure; warnings W-001…W-009 are all live. 45 tests green, including the
+full-simulation snapshot that freezes the reference projection against numeric drift.
+Next step: Phase 3 — the web app MVP (see [`docs/05-roadmap.md`](docs/05-roadmap.md)).
 
 ## Getting started
 
@@ -142,7 +146,7 @@ const input = quickInputSchema.parse({
 });
 
 const result = quickAssess(input, defaultEngineConfig);
-console.log(result.rule.threshold); // derived R*, e.g. 0.0455 with default assumptions
+console.log(result.rule.threshold); // derived R*, e.g. 0.028 with default assumptions
 console.log(result.verdict.kind); // "BUY_MORTGAGE" | "BUY_CASH" | "RENT" | "GREY_ZONE"
 console.log(result.yearOne.mortgage?.items); // traced year-1 cost lines
 ```

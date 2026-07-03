@@ -20,8 +20,12 @@ export const costGrowthSchema = z.discriminatedUnion("kind", [
 ]);
 
 export const costTimingSchema = z.discriminatedUnion("kind", [
-  /** A single payment at the given month (0 = at closing). */
-  z.object({ kind: z.literal("oneTime"), month: z.number().int().min(0) }),
+  /** A single payment of `amount` EUR at the given month (0 = at closing). */
+  z.object({ kind: z.literal("oneTime"), month: z.number().int().min(0), amount: money }),
+  /**
+   * A yearly cost. `growth` applies to `fixedAnnual` bases only: percent bases
+   * inherently track their reference (value or rent) and ignore it.
+   */
   z.object({ kind: z.literal("recurring"), base: costBaseSchema, growth: costGrowthSchema }),
 ]);
 

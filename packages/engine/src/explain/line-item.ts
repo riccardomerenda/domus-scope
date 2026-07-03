@@ -118,4 +118,94 @@ export const formulaRegistry: Record<string, FormulaDescriptor> = {
       "Expected year-1 home value gain, shown as a negative line so the gross opportunity " +
       "cost is never silently netted (critique W2, BR-019).",
   },
+  "cost.rent.year": {
+    id: "cost.rent.year",
+    expression: "rent_t = rent_base × (1 + rent_growth)^(t−1)",
+    description: "Annual rent for year t; year 1 is the base equivalent rent.",
+  },
+  "cost.interest.year": {
+    id: "cost.interest.year",
+    expression: "interest_t = Σ interest_m over the months of year t",
+    description:
+      "Exact mortgage interest from the amortization schedule (not the simplified preview).",
+  },
+  "cost.maintenance.year": {
+    id: "cost.maintenance.year",
+    expression: "maintenance_t = value_{t−1} × m%",
+    description: "Routine maintenance on the start-of-year property value (BR-010).",
+  },
+  "cost.recurringTax.year": {
+    id: "cost.recurringTax.year",
+    expression: "tax_t = value_{t−1} × tax%",
+    description: "Recurring ownership taxes on the start-of-year property value.",
+  },
+  "cost.recurringItem": {
+    id: "cost.recurringItem",
+    expression: "amount_t per the item's base and growth (cost catalog §4)",
+    description: "A recurring cost-catalog item, resolved for year t.",
+  },
+  "cost.oneTimeItem": {
+    id: "cost.oneTimeItem",
+    expression: "unrecoverable share of a one-time payment",
+    description:
+      "One-time cost-catalog item: only the unrecoverable share is a cost; recoverable " +
+      "shares contribute opportunity cost and return at liquidation (BR-016).",
+  },
+  "cost.deduction.year": {
+    id: "cost.deduction.year",
+    expression: "credit_t = −rate × min(interest_t, cap)",
+    description: "Mortgage-interest tax credit (G4), a negative unrecoverable cost.",
+  },
+  "cost.opportunity.year": {
+    id: "cost.opportunity.year",
+    expression: "opportunity_t = invested_capital_{start of t} × r_alt",
+    description:
+      "Gross opportunity cost of capital tied in the purchase: initial outlay + one-time " +
+      "costs paid + principal repaid. Always paired with the appreciation credit (BR-019).",
+  },
+  "cost.appreciationCredit.year": {
+    id: "cost.appreciationCredit.year",
+    expression: "credit_t = −(value_t − value_{t−1})",
+    description:
+      "Home value gain of year t, shown explicitly so the gross opportunity cost is never " +
+      "silently netted (critique W2).",
+  },
+  "cost.depositOpportunity": {
+    id: "cost.depositOpportunity",
+    expression: "opportunity_t = tied_deposits × r_alt",
+    description: "Opportunity cost of recoverable renter capital (deposit), per BR-016.",
+  },
+  "wealth.homeValue": {
+    id: "wealth.homeValue",
+    expression: "value_t = price × (1 + g)^t",
+    description: "Property value at the end of year t (Wealth lens).",
+  },
+  "wealth.debt": {
+    id: "wealth.debt",
+    expression: "−balance_t",
+    description: "Outstanding mortgage principal at the end of year t.",
+  },
+  "wealth.sellingCosts": {
+    id: "wealth.sellingCosts",
+    expression: "−value_t × selling_cost_rate",
+    description: "Hypothetical sale transaction costs (liquidation basis, critique W7).",
+  },
+  "wealth.recoveredCapital": {
+    id: "wealth.recoveredCapital",
+    expression: "Σ recoverable shares of one-time payments",
+    description: "Capital returned at liquidation (retained renovation value), flat.",
+  },
+  "wealth.portfolio": {
+    id: "wealth.portfolio",
+    expression:
+      "P_m = P_{m−1} × (1 + r_alt/12) + (budget_m − outflow_m); net = P − cgt × max(P − contributed, 0)",
+    description:
+      "Budget-symmetric investment portfolio: whoever spends less each month invests the " +
+      "difference. Capital-gains tax applies at liquidation (G5).",
+  },
+  "wealth.deposits": {
+    id: "wealth.deposits",
+    expression: "Σ recoverable renter payments",
+    description: "Deposits returned to the renter, flat (BR-016).",
+  },
 };

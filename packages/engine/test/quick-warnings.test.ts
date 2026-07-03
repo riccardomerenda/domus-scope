@@ -52,7 +52,7 @@ describe("quick-level warnings (W-001…W-006, W-009)", () => {
     expect(warningIds(parseInput({ horizonYears: 3 }))).not.toContain("W-003");
   });
 
-  it("W-004 when a cash purchase drains liquidity below the fund", () => {
+  it("W-004 and W-002 when a cash purchase drains liquidity below the fund (TV-09)", () => {
     const ids = warningIds(
       parseInput({
         financing: { kind: "cash" },
@@ -60,7 +60,7 @@ describe("quick-level warnings (W-001…W-006, W-009)", () => {
       }),
     );
     expect(ids).toContain("W-004");
-    expect(ids).not.toContain("W-002");
+    expect(ids).toContain("W-002");
   });
 
   it("W-005 when LTV exceeds the configured threshold", () => {

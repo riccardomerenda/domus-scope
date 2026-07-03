@@ -47,6 +47,12 @@ export const scenarioInputSchema = z
     assumptions: economicAssumptionsSchema.partial().default({}),
     profile: personalProfileSchema.optional(),
     horizonYears: years,
+    /**
+     * Transaction costs of a hypothetical sale, as a fraction of the property
+     * value — used by every liquidation-basis figure (critique W7).
+     * IT default: 3% agency + 22% VAT.
+     */
+    sellingCostRate: z.number().min(0).max(0.2).default(0.0366),
   })
   .refine((s) => s.financing.kind !== "mortgage" || s.financing.downPayment <= s.property.price, {
     message: "Down payment cannot exceed the property price (LTV > 100%, BR-003)",

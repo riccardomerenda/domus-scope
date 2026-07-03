@@ -1,6 +1,7 @@
+import { resolveAssumptions } from "../config/resolve";
 import { type CostBreakdown, type LineItem, type Lens, type Sign } from "../explain/line-item";
 import { normalizeZero } from "../lib/numbers";
-import { mergeAssumptions, type EconomicAssumptions } from "../schemas/assumptions";
+import { type EconomicAssumptions } from "../schemas/assumptions";
 import { defaultEngineConfig, type EngineConfig } from "../schemas/engine-config";
 import { type MortgageFinancing } from "../schemas/financing";
 import { type QuickInput } from "../schemas/quick-input";
@@ -42,7 +43,7 @@ export function quickAssess(
   input: QuickInput,
   config: EngineConfig = defaultEngineConfig,
 ): QuickResult {
-  const assumptions = mergeAssumptions(config.assumptions, input.assumptions);
+  const assumptions = resolveAssumptions(config.assumptions, input.assumptions).values;
   const rule = assessQuickRule(input, assumptions, config);
 
   const rent = rentYearOne(input.equivalentMonthlyRent);
@@ -241,11 +242,12 @@ function collectWarnings(
       input.financing.kind === "mortgage" ? input.financing.downPayment : input.propertyPrice;
     const residual = input.liquidity.available - capitalRequired;
     if (residual < input.liquidity.emergencyFund) {
-      warnings.push(
-        input.financing.kind === "cash"
-          ? cashDrainsLiquidityWarning(residual, input.liquidity.emergencyFund)
-          : liquidityBelowFundWarning(residual, input.liquidity.emergencyFund),
-      );
+      // TV-09: the generic liquidity warning always fires; the cash-specific
+      // one is added on top when the whole price is paid upfront.
+      warnings.push(liquidityBelowFundWarning(residual, input.liquidity.emergencyFund));
+      if (input.financing.kind === "cash") {
+        warnings.push(cashDrainsLiquidityWarning(residual, input.liquidity.emergencyFund));
+      }
     }
   }
   if (!config.toggles.opportunityCost) {

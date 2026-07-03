@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { economicAssumptionsSchema, type EconomicAssumptions } from "./assumptions";
-import { fraction } from "./common";
+import { fraction, money } from "./common";
 
 export const featureTogglesSchema = z.object({
   /** BR-011: disabling the opportunity-cost line always raises W-006. */
@@ -29,21 +29,42 @@ export const warningThresholdsSchema = z.object({
   highLtv: fraction,
 });
 
+/** G4: Italian mortgage-interest deduction, fully parameterized. */
+export const taxCreditsSchema = z.object({
+  mortgageInterestDeduction: z.object({
+    /** Share of (capped) interest returned as a tax credit. IT default: 19%. */
+    rate: fraction,
+    /** Annual interest base the rate applies to at most. IT default: 4,000 €. */
+    annualInterestCap: money,
+  }),
+});
+
 export const engineConfigSchema = z.object({
   /** Grey band around the derived threshold R*, in rate points (§2). */
   greyBand: z.number().min(0).max(0.05),
+  /**
+   * Wealth-lens grey zone: |advantage at horizon| below this fraction of the
+   * property price yields GREY_ZONE instead of a directional verdict.
+   */
+  wealthGreyBandFraction: z.number().min(0).max(0.2),
   /** Relative epsilon for money comparisons (§10 determinism policy). */
   epsilon: z.number().positive(),
   toggles: featureTogglesSchema,
   sanityBounds: sanityBoundsSchema,
   warningThresholds: warningThresholdsSchema,
-  /** Engine-default assumption layer (lowest precedence, §9). */
-  assumptions: economicAssumptionsSchema,
+  taxCredits: taxCreditsSchema,
+  /**
+   * Global assumption layer (§9): overrides the engine defaults; scenarios may
+   * override it in turn. Partial — absent keys fall back to engine defaults,
+   * and provenance stays visible (NFR-005).
+   */
+  assumptions: economicAssumptionsSchema.partial(),
 });
 
 export type FeatureToggles = z.infer<typeof featureTogglesSchema>;
 export type SanityBounds = z.infer<typeof sanityBoundsSchema>;
 export type WarningThresholds = z.infer<typeof warningThresholdsSchema>;
+export type TaxCredits = z.infer<typeof taxCreditsSchema>;
 export type EngineConfig = z.infer<typeof engineConfigSchema>;
 
 /** The "Base" preset of the domain spec (§9) as the engine-default layer. */
@@ -59,6 +80,7 @@ export const defaultAssumptions: EconomicAssumptions = {
 
 export const defaultEngineConfig: EngineConfig = {
   greyBand: 0.005,
+  wealthGreyBandFraction: 0.01,
   epsilon: 1e-9,
   toggles: {
     opportunityCost: true,
@@ -69,5 +91,7 @@ export const defaultEngineConfig: EngineConfig = {
   },
   sanityBounds: { minRate: -0.1, maxRate: 0.15 },
   warningThresholds: { shortHorizonYears: 3, highLtv: 0.8 },
-  assumptions: defaultAssumptions,
+  taxCredits: { mortgageInterestDeduction: { rate: 0.19, annualInterestCap: 4_000 } },
+  // Empty global layer: values fall back to the engine defaults (§9).
+  assumptions: {},
 };

@@ -83,6 +83,31 @@ export function opportunityCostDisabledWarning(): EngineWarning {
   };
 }
 
+/** W-007: the projection contains years with negative home equity. */
+export function negativeEquityWarning(firstYear: number): EngineWarning {
+  return {
+    id: "W-007",
+    severity: "caution",
+    message:
+      "In part of the projection the outstanding debt exceeds the property value (negative equity).",
+    context: { firstYear },
+  };
+}
+
+/** W-008 (G7): the horizon extends past the mortgage payoff. */
+export function horizonBeyondPayoffWarning(
+  horizonYears: number,
+  durationYears: number,
+): EngineWarning {
+  return {
+    id: "W-008",
+    severity: "info",
+    message:
+      "The horizon extends beyond the mortgage payoff: later years have no payment, only ownership costs.",
+    context: { horizonYears, durationYears },
+  };
+}
+
 /** W-009 (BR-020): an assumption lies outside the plausibility bounds. */
 export function assumptionOutOfBoundsWarning(
   field: string,

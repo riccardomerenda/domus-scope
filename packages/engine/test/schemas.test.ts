@@ -64,7 +64,7 @@ describe("schema validation at the engine boundary", () => {
       id: "notary-deed",
       label: "Notary — deed",
       scenario: "buy",
-      timing: { kind: "oneTime", month: 0 },
+      timing: { kind: "oneTime", month: 0, amount: 2_500 },
       recoverability: { kind: "none" },
       sign: "cost",
     });
