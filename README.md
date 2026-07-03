@@ -90,18 +90,20 @@ domus-scope/
 
 ## Status
 
-**Phase 2 complete** — the analytical engine is done. `simulate()` runs both lenses over
-the full horizon: the Cost lens (itemized unrecoverable costs with gross opportunity cost
-paired to the appreciation credit, exact mortgage interest, the Italian interest tax
-credit, hold and liquidation bases) and the Wealth lens (budget-symmetric monthly
-simulation with capital-gains tax, the `advantage_t` curve, four break-evens). The cost
-catalog resolves declarative `CostItem`s and ships editable Italian presets (registration
-tax, notary, agency, imposta sostitutiva, deposit, renovation with partial
-recoverability…). Assumptions resolve through three layers (engine defaults → global →
-scenario) with per-value provenance. Verdicts carry ranked reasons and a fragility-ready
-structure; warnings W-001…W-009 are all live. 45 tests green, including the
-full-simulation snapshot that freezes the reference projection against numeric drift.
-Next step: Phase 3 — the web app MVP (see [`docs/05-roadmap.md`](docs/05-roadmap.md)).
+**Phase 3 complete** — the web app MVP is live on top of the finished analytical engine
+(Phases 0–2: quick rule with derived threshold, two-lens `simulate()`, Italian cost
+presets, layered assumptions with provenance, 45 engine tests including the frozen
+reference snapshot). The app (`apps/web`, Vite + React 19 + Tailwind v4, local-first
+via IndexedDB) ships: scenario CRUD with dashboard cards and archive, the Quick-mode
+screen with live results (derived-threshold gauge, three-bar year-1 comparison with
+validated CVD-safe colors, itemized breakdowns, warnings), the **explanation drawer** —
+click any number to see its formula, resolved inputs, and lens — assumption presets,
+light/dark themes, and JSON export/import in Settings. 11 web tests cover the repository
+and the quick flow end-to-end (verdicts, drawer, warnings, persistence). Playwright
+smoke tests are deferred to Phase 4. Next: Phase 4 — the analytical mode UI
+(see [`docs/05-roadmap.md`](docs/05-roadmap.md)).
+
+Run it: `pnpm --filter @domus-scope/web dev` → http://localhost:5173
 
 ## Getting started
 

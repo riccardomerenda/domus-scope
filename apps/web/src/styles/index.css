@@ -1,0 +1,71 @@
+@import "tailwindcss";
+@import "@fontsource-variable/inter";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Design tokens. Chart colors are the validated triple (rent/buy/cash) from
+ * the dataviz reference palette; ink/surface tokens follow its chrome table.
+ * Light and dark values swap here; components only use semantic classes.
+ */
+:root {
+  --ds-page: #f9f9f7;
+  --ds-surface: #fcfcfb;
+  --ds-ink: #0b0b0b;
+  --ds-ink-2: #52514e;
+  --ds-ink-3: #898781;
+  --ds-hairline: #e1e0d9;
+  --ds-baseline: #c3c2b7;
+  --ds-border: rgba(11, 11, 11, 0.1);
+  --ds-rent: #2a78d6;
+  --ds-buy: #1baf7a;
+  --ds-cash: #4a3aa7;
+  --ds-greyzone: #898781;
+  --ds-good: #0ca30c;
+  --ds-warning: #fab219;
+  --ds-serious: #ec835a;
+  --ds-critical: #d03b3b;
+}
+.dark {
+  --ds-page: #0d0d0d;
+  --ds-surface: #1a1a19;
+  --ds-ink: #ffffff;
+  --ds-ink-2: #c3c2b7;
+  --ds-ink-3: #898781;
+  --ds-hairline: #2c2c2a;
+  --ds-baseline: #383835;
+  --ds-border: rgba(255, 255, 255, 0.1);
+  --ds-rent: #3987e5;
+  --ds-buy: #199e70;
+  --ds-cash: #9085e9;
+  --ds-greyzone: #898781;
+}
+
+@theme inline {
+  --font-sans: "Inter Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --color-page: var(--ds-page);
+  --color-surface: var(--ds-surface);
+  --color-ink: var(--ds-ink);
+  --color-ink-2: var(--ds-ink-2);
+  --color-ink-3: var(--ds-ink-3);
+  --color-hairline: var(--ds-hairline);
+  --color-baseline: var(--ds-baseline);
+  --color-edge: var(--ds-border);
+  --color-rent: var(--ds-rent);
+  --color-buy: var(--ds-buy);
+  --color-cash: var(--ds-cash);
+  --color-greyzone: var(--ds-greyzone);
+  --color-good: var(--ds-good);
+  --color-warn: var(--ds-warning);
+  --color-serious: var(--ds-serious);
+  --color-critical: var(--ds-critical);
+}
+
+body {
+  @apply bg-page font-sans text-ink antialiased;
+}
+
+/* Numbers that align in columns. */
+.nums {
+  font-variant-numeric: tabular-nums;
+}

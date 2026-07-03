@@ -28,23 +28,23 @@ backend**, built on a **pure TypeScript domain engine** packaged separately from
 
 ## 2. Stack
 
-| Concern             | Choice                                           | Notes                                                              |
-| ------------------- | ------------------------------------------------ | ------------------------------------------------------------------ |
-| Language            | TypeScript, `strict: true`, ESM                  | Single language across packages                                    |
-| Package manager     | pnpm workspaces                                  | Monorepo, fast, strict node_modules                                |
-| Domain engine       | `packages/engine` — zero UI deps                 | Zod as its only runtime dependency                                 |
-| UI framework        | React 19 + Vite                                  | SPA, code-split by route                                           |
-| Styling             | Tailwind CSS v4                                  | Design tokens as CSS variables, dark/light                         |
-| Components          | Radix UI primitives + in-house styled components | Accessible by default; no heavyweight kit                          |
-| Charts              | Recharts                                         | Cumulative curves, tornado, heatmap, stacked areas                 |
-| App state           | Zustand (slices)                                 | Scenarios, profile, settings; engine results are derived, memoized |
-| Persistence         | Dexie (IndexedDB)                                | Schema-versioned with migrations; JSON export/import               |
-| Forms & validation  | react-hook-form + Zod resolvers                  | The same Zod schemas validate forms, storage, and imports          |
-| Unit/property tests | Vitest + fast-check                              | Golden vectors TV-01…10, invariants PT-01…03                       |
-| Component tests     | Testing Library                                  | Critical flows: quick mode, results, warnings                      |
-| E2E smoke           | Playwright                                       | One happy path per release phase                                   |
-| Lint/format         | ESLint (flat config) + Prettier                  | CI gate                                                            |
-| PWA                 | vite-plugin-pwa                                  | Offline, installable                                               |
+| Concern             | Choice                                           | Notes                                                                                                                                                   |
+| ------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Language            | TypeScript, `strict: true`, ESM                  | Single language across packages                                                                                                                         |
+| Package manager     | pnpm workspaces                                  | Monorepo, fast, strict node_modules                                                                                                                     |
+| Domain engine       | `packages/engine` — zero UI deps                 | Zod as its only runtime dependency                                                                                                                      |
+| UI framework        | React 19 + Vite                                  | SPA, code-split by route                                                                                                                                |
+| Styling             | Tailwind CSS v4                                  | Design tokens as CSS variables, dark/light                                                                                                              |
+| Components          | Radix UI primitives + in-house styled components | Accessible by default; no heavyweight kit                                                                                                               |
+| Charts              | Recharts                                         | Cumulative curves, tornado, heatmap, stacked areas                                                                                                      |
+| App state           | Dexie live queries + React state                 | Stored data is the single source of truth; engine results are derived and memoized. Zustand deferred until genuinely cross-cutting client state appears |
+| Persistence         | Dexie (IndexedDB)                                | Schema-versioned with migrations; JSON export/import                                                                                                    |
+| Forms & validation  | react-hook-form + Zod resolvers                  | The same Zod schemas validate forms, storage, and imports                                                                                               |
+| Unit/property tests | Vitest + fast-check                              | Golden vectors TV-01…10, invariants PT-01…03                                                                                                            |
+| Component tests     | Testing Library                                  | Critical flows: quick mode, results, warnings                                                                                                           |
+| E2E smoke           | Playwright                                       | One happy path per release phase                                                                                                                        |
+| Lint/format         | ESLint (flat config) + Prettier                  | CI gate                                                                                                                                                 |
+| PWA                 | vite-plugin-pwa                                  | Offline, installable                                                                                                                                    |
 
 Node 22 LTS. No date libraries needed — the engine works on period indices, which also
 protects determinism.
@@ -84,7 +84,7 @@ domus-scope/
         │   │   ├── comparison/   # multi-scenario table
         │   │   ├── journal/      # decision diary
         │   │   └── settings/     # presets editor, cost catalog editor, data mgmt
-        │   ├── stores/           # Zustand slices
+        │   ├── stores/           # client state (if/when needed beyond live queries)
         │   ├── persistence/      # Dexie db, migrations, export/import
         │   ├── components/       # shared styled primitives
         │   └── lib/              # formatting (Intl it-IT), misc
