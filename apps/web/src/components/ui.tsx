@@ -1,7 +1,7 @@
 import { type ButtonHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { type VerdictKind, type WarningSeverity } from "@domus-scope/engine";
-import { CloseIcon, AlertIcon, InfoIcon } from "./Icons";
+import { CloseIcon, AlertIcon, CheckIcon, InfoIcon } from "./Icons";
 
 /* ---------- Buttons ---------- */
 
@@ -227,6 +227,26 @@ export function VerdictChip({ kind, indicative }: { kind: VerdictKind; indicativ
     >
       {meta.label}
       {indicative ? <span className="font-normal opacity-75">· indicative</span> : null}
+    </span>
+  );
+}
+
+/* ---------- Fragility badge (icon + label, never color alone) ---------- */
+
+export function FragilityBadge({ rating }: { rating: "solid" | "sensitive" | "fragile" }) {
+  const meta =
+    rating === "solid"
+      ? { label: "Solid", className: "border-good/40 text-good", Icon: CheckIcon }
+      : rating === "sensitive"
+        ? { label: "Sensitive", className: "border-serious/40 text-serious", Icon: AlertIcon }
+        : { label: "Fragile", className: "border-critical/40 text-critical", Icon: AlertIcon };
+  const Icon = meta.Icon;
+  return (
+    <span
+      title="Share of sensitivity perturbations that flip the verdict"
+      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium ${meta.className}`}
+    >
+      <Icon width={12} height={12} /> {meta.label}
     </span>
   );
 }

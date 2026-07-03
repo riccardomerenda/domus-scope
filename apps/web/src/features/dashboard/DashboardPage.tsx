@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
+import { runSensitivity, type FragilityRating } from "@domus-scope/engine";
 import { db, defaultAppConfig, type AppConfig, type StoredScenario } from "../../persistence/db";
 import {
   createScenario,
@@ -8,12 +9,13 @@ import {
   duplicateScenario,
   setArchived,
 } from "../../persistence/scenarios";
-import { assessQuickData, runSimulation } from "../../lib/assess";
+import { assessQuickData, engineConfigFor, runSimulation } from "../../lib/assess";
 import { formatDate, formatEUR, formatEURSigned, formatPercent } from "../../lib/format";
 import {
   Button,
   Card,
   ConfirmDialog,
+  FragilityBadge,
   LensTag,
   ToggleField,
   VerdictChip,
@@ -96,6 +98,7 @@ function EmptyState({ archivedView, onCreate }: { archivedView: boolean; onCreat
 interface CardSummary {
   verdictKind: VerdictKindOf | undefined;
   indicative: boolean;
+  fragility: FragilityRating | undefined;
   price: number;
   rent: number;
   rows: { label: string; value: string }[];
@@ -109,9 +112,14 @@ function summarize(scenario: StoredScenario, appConfig: AppConfig): CardSummary 
     const data = scenario.analytical;
     const outcome = runSimulation({ id: scenario.id, title: scenario.title }, data, appConfig);
     const last = outcome.result?.wealthLens.years.at(-1);
+    const fragility = outcome.input
+      ? runSensitivity(outcome.input, engineConfigFor(appConfig), { heatmap: null }).fragility
+          .rating
+      : undefined;
     return {
       verdictKind: outcome.result?.verdict.kind,
       indicative: outcome.result?.verdict.strength === "indicative",
+      fragility,
       price: data.property.price,
       rent: data.rentAlternative.equivalentMonthlyRent,
       invalid: !outcome.result,
@@ -137,6 +145,7 @@ function summarize(scenario: StoredScenario, appConfig: AppConfig): CardSummary 
   return {
     verdictKind: assessment.result?.verdict.kind,
     indicative: assessment.result?.verdict.strength === "indicative",
+    fragility: undefined,
     price: scenario.quick.propertyPrice,
     rent: scenario.quick.equivalentMonthlyRent,
     invalid: !assessment.result,
@@ -167,7 +176,10 @@ function ScenarioCard({ scenario, appConfig }: { scenario: StoredScenario; appCo
             {scenario.mode === "analytical" ? <LensTag>full</LensTag> : null}
           </div>
           {summary.verdictKind && !summary.invalid ? (
-            <VerdictChip kind={summary.verdictKind} indicative={summary.indicative} />
+            <span className="flex shrink-0 items-center gap-1.5">
+              {summary.fragility ? <FragilityBadge rating={summary.fragility} /> : null}
+              <VerdictChip kind={summary.verdictKind} indicative={summary.indicative} />
+            </span>
           ) : (
             <span className="text-xs text-critical">invalid inputs</span>
           )}

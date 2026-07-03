@@ -30,6 +30,11 @@
   --ds-seq-2: #3987e5;
   --ds-seq-3: #6da7ec;
   --ds-seq-4: #9ec5f4;
+  /* Scenario-comparison series (validated 4-slot categorical, non-entity hues). */
+  --ds-cmp-1: #eda100;
+  --ds-cmp-2: #008300;
+  --ds-cmp-3: #e87ba4;
+  --ds-cmp-4: #eb6834;
 }
 .dark {
   --ds-page: #0d0d0d;
@@ -49,6 +54,10 @@
   --ds-seq-2: #6da7ec;
   --ds-seq-3: #3987e5;
   --ds-seq-4: #1c5cab;
+  --ds-cmp-1: #c98500;
+  --ds-cmp-2: #008300;
+  --ds-cmp-3: #d55181;
+  --ds-cmp-4: #d95926;
 }
 
 @theme inline {

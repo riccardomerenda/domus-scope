@@ -5,6 +5,7 @@ import "./styles/index.css";
 import { ThemeProvider } from "./app/theme";
 import { Shell } from "./app/Shell";
 import { ExplainProvider } from "./features/explain/ExplainContext";
+import { ComparePage } from "./features/compare/ComparePage";
 import { DashboardPage } from "./features/dashboard/DashboardPage";
 import { ProfilePage } from "./features/profile/ProfilePage";
 import { ScenarioPage } from "./features/scenario/ScenarioPage";
@@ -22,6 +23,7 @@ createRoot(container).render(
             <Route element={<Shell />}>
               <Route index element={<DashboardPage />} />
               <Route path="scenario/:id" element={<ScenarioPage />} />
+              <Route path="compare" element={<ComparePage />} />
               <Route path="profile" element={<ProfilePage />} />
               <Route path="settings" element={<SettingsPage />} />
             </Route>

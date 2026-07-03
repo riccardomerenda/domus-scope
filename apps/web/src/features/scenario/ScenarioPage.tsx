@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
+import { runSensitivity } from "@domus-scope/engine";
 import {
   db,
   defaultAppConfig,
@@ -9,7 +10,7 @@ import {
   type StoredScenario,
 } from "../../persistence/db";
 import { quickToAnalytical, setMode, updateScenario } from "../../persistence/scenarios";
-import { assessQuickData, runSimulation } from "../../lib/assess";
+import { assessQuickData, engineConfigFor, runSimulation } from "../../lib/assess";
 import { useDebouncedSave } from "../../lib/hooks";
 import { Button, Segmented } from "../../components/ui";
 import { ArrowRightIcon } from "../../components/Icons";
@@ -17,6 +18,7 @@ import { QuickForm } from "./QuickForm";
 import { QuickResultsPanel } from "./QuickResultsPanel";
 import { InputsPanel } from "./analytical/InputsPanel";
 import { ResultsPanel } from "./analytical/ResultsPanel";
+import { SensitivityPanel } from "./analytical/SensitivityPanel";
 
 export function ScenarioPage() {
   const { id } = useParams<{ id: string }>();
@@ -107,16 +109,21 @@ function AnalyticalWorkspace({ scenario }: { scenario: StoredScenario }) {
   const [data, setData] = useState<AnalyticalData>(
     () => scenario.analytical ?? quickToAnalytical(scenario.quick),
   );
-  const [tab, setTab] = useState<"inputs" | "results">("inputs");
+  const [tab, setTab] = useState<"inputs" | "results" | "sensitivity">("inputs");
   useDebouncedSave(
     () => void updateScenario(scenario.id, { analytical: data }),
     [data, scenario.id],
   );
 
   const appConfig = storedConfig ?? defaultAppConfig;
+  const config = useMemo(() => engineConfigFor(appConfig), [appConfig]);
   const outcome = useMemo(
     () => runSimulation({ id: scenario.id, title: scenario.title }, data, appConfig),
     [scenario.id, scenario.title, data, appConfig],
+  );
+  const sensitivity = useMemo(
+    () => (outcome.input ? runSensitivity(outcome.input, config) : undefined),
+    [outcome.input, config],
   );
 
   if (storedConfig === undefined) return null; // loading app config
@@ -124,12 +131,13 @@ function AnalyticalWorkspace({ scenario }: { scenario: StoredScenario }) {
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="w-64">
+        <div className="w-96 max-w-full">
           <Segmented
             label="Workspace tab"
             options={[
               { value: "inputs", label: "Inputs" },
               { value: "results", label: "Results" },
+              { value: "sensitivity", label: "Sensitivity" },
             ]}
             value={tab}
             onChange={setTab}
@@ -140,6 +148,10 @@ function AnalyticalWorkspace({ scenario }: { scenario: StoredScenario }) {
 
       {tab === "inputs" ? (
         <InputsPanel data={data} onChange={setData} appConfig={appConfig} />
+      ) : tab === "results" ? (
+        <ResultsPanel outcome={outcome} fragility={sensitivity?.fragility.rating} />
+      ) : outcome.input && sensitivity ? (
+        <SensitivityPanel sensitivity={sensitivity} input={outcome.input} config={config} />
       ) : (
         <ResultsPanel outcome={outcome} />
       )}

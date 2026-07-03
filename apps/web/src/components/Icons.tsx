@@ -128,3 +128,15 @@ export const EditIcon = (p: SVGProps<SVGSVGElement>) => (
     <path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z" />
   </svg>
 );
+
+export const CheckIcon = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <path d="M20 6 9 17l-5-5" />
+  </svg>
+);
+
+export const CompareIcon = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <path d="M8 3 4 7l4 4M4 7h16M16 21l4-4-4-4M20 17H4" />
+  </svg>
+);

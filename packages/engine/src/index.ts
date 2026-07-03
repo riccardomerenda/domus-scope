@@ -13,4 +13,5 @@ export * from "./config";
 export * from "./costs";
 export * from "./lenses";
 export * from "./simulation";
+export * from "./sensitivity";
 export * from "./presets";

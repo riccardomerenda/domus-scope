@@ -1,5 +1,12 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { HomeIcon, MoonIcon, SettingsIcon, SlidersIcon, SunIcon } from "../components/Icons";
+import {
+  CompareIcon,
+  HomeIcon,
+  MoonIcon,
+  SettingsIcon,
+  SlidersIcon,
+  SunIcon,
+} from "../components/Icons";
 import { useTheme } from "./theme";
 
 function navClass({ isActive }: { isActive: boolean }): string {
@@ -43,6 +50,9 @@ export function Shell() {
           <NavLink to="/" end className={navClass}>
             <HomeIcon /> Dashboard
           </NavLink>
+          <NavLink to="/compare" className={navClass}>
+            <CompareIcon /> Compare
+          </NavLink>
           <NavLink to="/profile" className={navClass}>
             <SlidersIcon /> Profile & Assumptions
           </NavLink>
@@ -64,6 +74,9 @@ export function Shell() {
           <nav className="flex items-center gap-1">
             <NavLink to="/" end className={navClass}>
               <HomeIcon />
+            </NavLink>
+            <NavLink to="/compare" className={navClass}>
+              <CompareIcon />
             </NavLink>
             <NavLink to="/profile" className={navClass}>
               <SlidersIcon />

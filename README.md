@@ -90,25 +90,21 @@ domus-scope/
 
 ## Status
 
-**Phase 4 complete** — the analytical mode is fully usable end-to-end (source-doc flow
-11.2). On top of the engine (Phases 0–2) and the Quick-mode MVP (Phase 3), the app now
-ships: one-click **upgrade from Quick to full analysis** (data seeded, mode switchable
-back); the sectioned **Inputs screen** — property, editable **cost catalog** (Italian
-presets generated from the scenario's own numbers + a full custom-item editor with
-one-time/recurring timing, percent bases, recoverability), financing with live exact
-payment preview, rent alternative, **assumptions with per-value provenance**
-(engine-default / global / scenario) and preset chips, horizon & selling costs, and the
-liquidity check against the global profile; the **Results screen** — verdict banner with
-advantage at horizon and warnings (FR-015), KPI tiles, hold/liquidation and
-nominal/real toggles, the five charts (cumulative unrecoverable costs, net worth,
-**sell-at-year-t advantage**, mortgage anatomy, buy-side cost composition, all
-CVD-validated colors with hover tooltips), wealth compositions at horizon, and the
-expandable **year table** whose line items all open the explanation drawer; plus the
-**Profile & Assumptions** page (personal profile, global assumption layer with
-provenance, built-in + user presets). Storage migrated to schema v2 (v1 exports still
-import). 63 tests green across the workspace. Playwright smoke remains deferred
-(component tests cover both flows). Next: Phase 5 — sensitivity & comparison
-(see [`docs/05-roadmap.md`](docs/05-roadmap.md)).
+**Phase 5 complete** — the app now answers the project's founding question, _"how
+fragile is this conclusion?"_. The engine gained `runSensitivity()`: one-at-a-time
+perturbations (rents, appreciation, returns, maintenance, mortgage rate, equivalent
+rent, horizon) with verdict-flip detection, a **fragility index** (Solid / Sensitive /
+Fragile), and the rent-growth × appreciation **verdict heatmap** — all deterministic and
+property-tested for economic monotonicity. In the app: the **Sensitivity tab** (fragility
+summary with the flipping variables called out, tornado of Δ-advantage with flip
+outlines, conservative/base/optimistic side-by-side, heatmap with legend), fragility
+badges on the **results banner and dashboard cards**, and the **Compare view** — up to
+four full-analysis scenarios side by side with aligned KPIs, overlaid advantage-per-year
+curves (separate validated 4-color palette), and an effective-assumptions table that
+highlights every difference. Everything before this (Phases 0–4: two-lens engine,
+Italian cost catalog, quick + analytical modes, explanation drawer, profile & presets,
+local-first storage) still holds; 73 tests green. Next: Phase 6 — decision journal,
+report/export, PWA polish (see [`docs/05-roadmap.md`](docs/05-roadmap.md)).
 
 Run it: `pnpm --filter @domus-scope/web dev` → http://localhost:5173
 

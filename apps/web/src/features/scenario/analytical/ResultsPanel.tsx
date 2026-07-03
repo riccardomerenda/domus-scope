@@ -6,10 +6,12 @@ import {
   type CostBreakdown,
   type SimulationResult,
 } from "@domus-scope/engine";
+import { type FragilityRating } from "@domus-scope/engine";
 import { type SimulationOutcome } from "../../../lib/assess";
 import { formatEUR, formatEURSigned } from "../../../lib/format";
 import {
   Card,
+  FragilityBadge,
   LensTag,
   Segmented,
   StatTile,
@@ -28,7 +30,13 @@ import {
 } from "./charts";
 import { YearTable } from "./YearTable";
 
-export function ResultsPanel({ outcome }: { outcome: SimulationOutcome }) {
+export function ResultsPanel({
+  outcome,
+  fragility,
+}: {
+  outcome: SimulationOutcome;
+  fragility?: FragilityRating | undefined;
+}) {
   if (outcome.issues) {
     return (
       <Card className="p-4">
@@ -44,15 +52,17 @@ export function ResultsPanel({ outcome }: { outcome: SimulationOutcome }) {
     );
   }
   if (!outcome.result || !outcome.input) return null;
-  return <Results result={outcome.result} input={outcome.input} />;
+  return <Results result={outcome.result} input={outcome.input} fragility={fragility} />;
 }
 
 function Results({
   result,
   input,
+  fragility,
 }: {
   result: SimulationResult;
   input: NonNullable<SimulationOutcome["input"]>;
+  fragility?: FragilityRating | undefined;
 }) {
   const [basis, setBasis] = useState<"hold" | "liquidation">(result.summary.basis);
   const [real, setReal] = useState(false);
@@ -159,6 +169,7 @@ function Results({
             kind={result.verdict.kind}
             indicative={result.verdict.strength === "indicative"}
           />
+          {fragility ? <FragilityBadge rating={fragility} /> : null}
           <span className="nums text-sm text-ink-2">
             Buying leaves you{" "}
             <strong className={advantage >= 0 ? "text-good" : "text-critical"}>
