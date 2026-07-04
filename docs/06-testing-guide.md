@@ -64,6 +64,9 @@ Two modes per scenario:
 3. **The signature interaction:** click any number with a dotted underline — a drawer
    opens with the formula, the exact input values used, and which methodology ("lens")
    produced it. Also try _"How is the threshold R\* derived?"_ under the gauge.
+   The input-side twin: every field label carries a small **ⓘ** — click it for what the
+   field is, why it matters, typical Italian values, pitfalls, and which way it pushes
+   the verdict.
 4. Play with the inputs: switch financing to **Cash** (verdict entity changes), set the
    horizon to 2 years (a warning about one-time costs appears), set comparability to
    _Low_ (the verdict becomes _indicative_), enable the liquidity check with savings
@@ -115,8 +118,12 @@ Two modes per scenario:
 - **Profile & Assumptions** (sidebar): your liquidity/emergency fund (drives the
   affordability warnings), the global assumption layer, preset management, and the
   qualitative weights.
-- **Settings**: light/dark theme, full JSON export/import (backups are additive, never
-  overwrite), wipe.
+- **Glossary** (sidebar): the full field guide — every concept, input, and assumption
+  with typical Italian values and the direction of its effect; the same content the ⓘ
+  popovers show.
+- **Settings**: light/dark theme, **language** (Auto / English / Italiano — the whole
+  UI is bilingual; numbers and dates stay in Italian format either way), full JSON
+  export/import (backups are additive, never overwrite), wipe.
 - **PWA**: in a Chromium browser you can install the app (icon in the address bar);
   it works offline after the first load.
 

@@ -8,6 +8,7 @@ import {
 } from "@domus-scope/engine";
 import { type AnalyticalData } from "../../../persistence/db";
 import { formatEUR, formatPercent } from "../../../lib/format";
+import { isMessageKey, useLocale, type LocaleContextValue } from "../../../i18n";
 import {
   Button,
   Card,
@@ -16,6 +17,7 @@ import {
   SelectField,
   ToggleField,
 } from "../../../components/ui";
+import { InfoDot } from "../../../components/InfoDot";
 import { CloseIcon, EditIcon, PlusIcon, TrashIcon } from "../../../components/Icons";
 
 export function CostCatalogSection({
@@ -25,9 +27,17 @@ export function CostCatalogSection({
   data: AnalyticalData;
   onChange: (next: AnalyticalData) => void;
 }) {
+  const { t } = useLocale();
   const [editing, setEditing] = useState<CostItem | "new" | null>(null);
   const items = data.costItems;
   const setItems = (costItems: CostItem[]) => onChange({ ...data, costItems });
+
+  // Preset items get their label in the active locale at generation time
+  // (labels are user-editable data stored with the scenario).
+  const localizeLabel = (item: CostItem): CostItem => {
+    const key = `costItem.${item.id}`;
+    return isMessageKey(key) ? { ...item, label: t(key) } : item;
+  };
 
   const addItalianPurchase = () => {
     const principal =
@@ -42,12 +52,14 @@ export function CostCatalogSection({
       ...(principal !== undefined && principal > 0 ? { mortgagePrincipal: principal } : {}),
       regime: "primaryExisting",
     });
-    mergeGenerated(generated);
+    mergeGenerated(generated.map(localizeLabel));
   };
 
   const addItalianRent = () => {
     mergeGenerated(
-      italianRentCostItems({ monthlyRent: data.rentAlternative.equivalentMonthlyRent }),
+      italianRentCostItems({ monthlyRent: data.rentAlternative.equivalentMonthlyRent }).map(
+        localizeLabel,
+      ),
     );
   };
 
@@ -66,26 +78,23 @@ export function CostCatalogSection({
     <Card className="p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h3 className="text-sm font-semibold text-ink">Cost catalog</h3>
-          <p className="mt-0.5 text-xs text-ink-3">
-            One-time and recurring costs beyond maintenance/taxes (those come from the assumptions).
-            Presets are editable data, not fixed truths.
-          </p>
+          <h3 className="flex items-center gap-1.5 text-sm font-semibold text-ink">
+            {t("costs.title")}
+            <InfoDot topic="costCatalog" />
+          </h3>
+          <p className="mt-0.5 text-xs text-ink-3">{t("costs.hint")}</p>
         </div>
         <div className="flex flex-wrap gap-1.5">
-          <Button onClick={addItalianPurchase}>+ Italian purchase costs</Button>
-          <Button onClick={addItalianRent}>+ Italian rent costs</Button>
+          <Button onClick={addItalianPurchase}>{t("costs.addItalianPurchase")}</Button>
+          <Button onClick={addItalianRent}>{t("costs.addItalianRent")}</Button>
           <Button variant="primary" onClick={() => setEditing("new")}>
-            <PlusIcon /> Custom item
+            <PlusIcon /> {t("costs.addCustom")}
           </Button>
         </div>
       </div>
 
       {items.length === 0 ? (
-        <p className="mt-4 text-sm text-ink-3">
-          No cost items yet. On short horizons, one-time purchase costs often decide the outcome
-          (BR-005) — add the Italian presets to start realistic.
-        </p>
+        <p className="mt-4 text-sm text-ink-3">{t("costs.empty")}</p>
       ) : (
         <ul className="mt-3 divide-y divide-hairline">
           {items.map((item) => (
@@ -103,15 +112,15 @@ export function CostCatalogSection({
                   <SideChip side={item.scenario} />
                   {item.sign === "credit" ? (
                     <span className="rounded-full border border-buy/40 px-1.5 text-[10px] text-buy">
-                      credit
+                      {t("costs.credit")}
                     </span>
                   ) : null}
                 </div>
-                <div className="nums text-xs text-ink-3">{describeItem(item)}</div>
+                <div className="nums text-xs text-ink-3">{describeItem(item, t)}</div>
               </div>
               <Button
                 className="px-2"
-                aria-label={`Edit ${item.label}`}
+                aria-label={t("costs.editAria", { label: item.label })}
                 onClick={() => setEditing(item)}
               >
                 <EditIcon width={14} height={14} />
@@ -119,7 +128,7 @@ export function CostCatalogSection({
               <Button
                 variant="danger"
                 className="px-2"
-                aria-label={`Delete ${item.label}`}
+                aria-label={t("costs.deleteAria", { label: item.label })}
                 onClick={() => setItems(items.filter((it) => it.id !== item.id))}
               >
                 <TrashIcon width={14} height={14} />
@@ -141,6 +150,7 @@ export function CostCatalogSection({
 }
 
 function SideChip({ side }: { side: CostItem["scenario"] }) {
+  const { t } = useLocale();
   const className =
     side === "buy"
       ? "border-buy/40 text-buy"
@@ -149,38 +159,45 @@ function SideChip({ side }: { side: CostItem["scenario"] }) {
         : "border-hairline text-ink-3";
   return (
     <span className={`rounded-full border px-1.5 text-[10px] font-medium ${className}`}>
-      {side}
+      {t(`costs.side.${side}`)}
     </span>
   );
 }
 
-function describeItem(item: CostItem): string {
+function describeItem(item: CostItem, t: LocaleContextValue["t"]): string {
   const recoverable =
     item.recoverability.kind === "full"
-      ? " · fully recoverable"
+      ? t("costs.desc.fullyRecoverable")
       : item.recoverability.kind === "partial"
-        ? ` · ${formatPercent(item.recoverability.share, 0)} recoverable`
+        ? t("costs.desc.partlyRecoverable", {
+            share: formatPercent(item.recoverability.share, 0),
+          })
         : "";
   if (item.timing.kind === "oneTime") {
-    return `one-time ${formatEUR(item.timing.amount)} at month ${item.timing.month}${recoverable}`;
+    return (
+      t("costs.desc.oneTime", {
+        amount: formatEUR(item.timing.amount),
+        month: item.timing.month,
+      }) + recoverable
+    );
   }
   const base = item.timing.base;
   const baseText =
     base.kind === "fixedAnnual"
-      ? `${formatEUR(base.amount)}/year`
+      ? t("costs.desc.fixedPerYear", { amount: formatEUR(base.amount) })
       : base.kind === "percentOfValue"
-        ? `${formatPercent(base.rate, 2)} of property value/year`
-        : `${formatPercent(base.rate, 2)} of annual rent`;
+        ? t("costs.desc.percentOfValue", { rate: formatPercent(base.rate, 2) })
+        : t("costs.desc.percentOfRent", { rate: formatPercent(base.rate, 2) });
   const growth = item.timing.growth;
   const growthText =
     base.kind === "fixedAnnual"
       ? growth.kind === "rate"
-        ? `, growing ${formatPercent(growth.rate, 1)}/year`
+        ? t("costs.desc.growingAt", { rate: formatPercent(growth.rate, 1) })
         : growth.kind === "tracksValue"
-          ? ", tracks property value"
-          : ", tracks rent"
+          ? t("costs.desc.tracksValue")
+          : t("costs.desc.tracksRent")
       : "";
-  return `recurring ${baseText}${growthText}${recoverable}`;
+  return t("costs.desc.recurring", { base: baseText, growth: growthText, recoverable });
 }
 
 /* ---------- Editor dialog ---------- */
@@ -282,6 +299,7 @@ function CostItemDialog({
   onSave: (item: CostItem) => void;
   onClose: () => void;
 }) {
+  const { t } = useLocale();
   const [draft, setDraft] = useState<DraftItem>(() => toDraft(initial));
   const [error, setError] = useState<string | null>(null);
   const set = (patch: Partial<DraftItem>) => setDraft((current) => ({ ...current, ...patch }));
@@ -290,7 +308,7 @@ function CostItemDialog({
     const id = initial?.id ?? `custom-${crypto.randomUUID()}`;
     const parsed = costItemSchema.safeParse(fromDraft(draft, id));
     if (!parsed.success) {
-      setError(parsed.error.issues[0]?.message ?? "Invalid item");
+      setError(parsed.error.issues[0]?.message ?? t("costs.dialog.invalid"));
       return;
     }
     onSave({ ...parsed.data, enabled: initial?.enabled ?? true });
@@ -306,10 +324,10 @@ function CostItemDialog({
         >
           <div className="flex items-start justify-between gap-3">
             <Dialog.Title className="text-sm font-semibold text-ink">
-              {initial ? "Edit cost item" : "New cost item"}
+              {initial ? t("costs.dialog.editTitle") : t("costs.dialog.newTitle")}
             </Dialog.Title>
             <Dialog.Close asChild>
-              <Button aria-label="Close" className="-mt-1 -mr-2 px-2">
+              <Button aria-label={t("common.close")} className="-mt-1 -mr-2 px-2">
                 <CloseIcon />
               </Button>
             </Dialog.Close>
@@ -317,7 +335,9 @@ function CostItemDialog({
 
           <div className="mt-4 space-y-3">
             <label className="block">
-              <span className="mb-1 block text-xs font-medium text-ink-2">Label</span>
+              <span className="mb-1 block text-xs font-medium text-ink-2">
+                {t("costs.dialog.label")}
+              </span>
               <input
                 className="w-full rounded-lg border border-hairline bg-surface px-3 py-2 text-sm text-ink focus-visible:outline-2 focus-visible:outline-rent"
                 value={draft.label}
@@ -327,47 +347,47 @@ function CostItemDialog({
 
             <div className="grid grid-cols-2 gap-3">
               <SelectField
-                label="Applies to"
+                label={t("costs.dialog.appliesTo")}
                 value={draft.scenario}
                 onChange={(event) => set({ scenario: event.target.value as DraftItem["scenario"] })}
               >
-                <option value="buy">Buy scenario</option>
-                <option value="rent">Rent scenario</option>
-                <option value="both">Both</option>
+                <option value="buy">{t("costs.dialog.buyScenario")}</option>
+                <option value="rent">{t("costs.dialog.rentScenario")}</option>
+                <option value="both">{t("costs.dialog.both")}</option>
               </SelectField>
               <SelectField
-                label="Direction"
+                label={t("costs.dialog.direction")}
                 value={draft.sign}
                 onChange={(event) => set({ sign: event.target.value as DraftItem["sign"] })}
               >
-                <option value="cost">Cost</option>
-                <option value="credit">Credit (e.g. tax deduction)</option>
+                <option value="cost">{t("costs.dialog.cost")}</option>
+                <option value="credit">{t("costs.dialog.creditOption")}</option>
               </SelectField>
             </div>
 
             <SelectField
-              label="Timing"
+              label={t("costs.dialog.timing")}
               value={draft.timingKind}
               onChange={(event) =>
                 set({ timingKind: event.target.value as DraftItem["timingKind"] })
               }
             >
-              <option value="oneTime">One-time payment</option>
-              <option value="recurring">Recurring (yearly)</option>
+              <option value="oneTime">{t("costs.dialog.oneTime")}</option>
+              <option value="recurring">{t("costs.dialog.recurring")}</option>
             </SelectField>
 
             {draft.timingKind === "oneTime" ? (
               <div className="grid grid-cols-2 gap-3">
                 <NumberField
-                  label="Amount"
-                  suffix="€"
+                  label={t("costs.dialog.amount")}
+                  suffix={t("suffix.eur")}
                   value={draft.amount}
                   min={0}
                   step={100}
                   onChange={(amount) => set({ amount })}
                 />
                 <NumberField
-                  label="Month (0 = at closing)"
+                  label={t("costs.dialog.month")}
                   value={draft.month}
                   min={0}
                   step={1}
@@ -377,40 +397,40 @@ function CostItemDialog({
             ) : (
               <div className="space-y-3">
                 <SelectField
-                  label="Base"
+                  label={t("costs.dialog.base")}
                   value={draft.baseKind}
                   onChange={(event) =>
                     set({ baseKind: event.target.value as DraftItem["baseKind"] })
                   }
                 >
-                  <option value="fixedAnnual">Fixed € per year</option>
-                  <option value="percentOfValue">% of property value</option>
-                  <option value="percentOfRent">% of annual rent</option>
+                  <option value="fixedAnnual">{t("costs.dialog.fixedAnnual")}</option>
+                  <option value="percentOfValue">{t("costs.dialog.percentValue")}</option>
+                  <option value="percentOfRent">{t("costs.dialog.percentRent")}</option>
                 </SelectField>
                 {draft.baseKind === "fixedAnnual" ? (
                   <div className="grid grid-cols-2 gap-3">
                     <NumberField
-                      label="Amount / year"
-                      suffix="€"
+                      label={t("costs.dialog.amountPerYear")}
+                      suffix={t("suffix.eur")}
                       value={draft.amount}
                       min={0}
                       step={100}
                       onChange={(amount) => set({ amount })}
                     />
                     <SelectField
-                      label="Growth"
+                      label={t("costs.dialog.growth")}
                       value={draft.growthKind}
                       onChange={(event) =>
                         set({ growthKind: event.target.value as DraftItem["growthKind"] })
                       }
                     >
-                      <option value="rate">Fixed rate</option>
-                      <option value="tracksValue">Tracks property value</option>
-                      <option value="tracksRent">Tracks rent</option>
+                      <option value="rate">{t("costs.dialog.fixedRate")}</option>
+                      <option value="tracksValue">{t("costs.dialog.tracksValue")}</option>
+                      <option value="tracksRent">{t("costs.dialog.tracksRent")}</option>
                     </SelectField>
                     {draft.growthKind === "rate" ? (
                       <PercentField
-                        label="Growth rate / year"
+                        label={t("costs.dialog.growthRate")}
                         value={draft.growthRate}
                         onChange={(growthRate) => set({ growthRate })}
                       />
@@ -419,7 +439,9 @@ function CostItemDialog({
                 ) : (
                   <PercentField
                     label={
-                      draft.baseKind === "percentOfValue" ? "% of value / year" : "% of annual rent"
+                      draft.baseKind === "percentOfValue"
+                        ? t("costs.dialog.percentValuePerYear")
+                        : t("costs.dialog.percentAnnualRent")
                     }
                     value={draft.rate}
                     onChange={(rate) => set({ rate })}
@@ -430,19 +452,21 @@ function CostItemDialog({
 
             <div className="grid grid-cols-2 gap-3">
               <SelectField
-                label="Recoverability (BR-016)"
+                label={t("costs.dialog.recoverability")}
                 value={draft.recoverabilityKind}
                 onChange={(event) =>
-                  set({ recoverabilityKind: event.target.value as DraftItem["recoverabilityKind"] })
+                  set({
+                    recoverabilityKind: event.target.value as DraftItem["recoverabilityKind"],
+                  })
                 }
               >
-                <option value="none">None — pure cost</option>
-                <option value="full">Full — returned (deposit)</option>
-                <option value="partial">Partial — adds value (renovation)</option>
+                <option value="none">{t("costs.dialog.recoverNone")}</option>
+                <option value="full">{t("costs.dialog.recoverFull")}</option>
+                <option value="partial">{t("costs.dialog.recoverPartial")}</option>
               </SelectField>
               {draft.recoverabilityKind === "partial" ? (
                 <PercentField
-                  label="Recoverable share"
+                  label={t("costs.dialog.recoverShare")}
                   value={draft.recoverableShare}
                   step={5}
                   onChange={(recoverableShare) => set({ recoverableShare })}
@@ -455,10 +479,10 @@ function CostItemDialog({
 
           <div className="mt-4 flex justify-end gap-2">
             <Dialog.Close asChild>
-              <Button>Cancel</Button>
+              <Button>{t("common.cancel")}</Button>
             </Dialog.Close>
             <Button variant="primary" onClick={save} disabled={draft.label.trim() === ""}>
-              Save item
+              {t("costs.dialog.save")}
             </Button>
           </div>
         </Dialog.Content>

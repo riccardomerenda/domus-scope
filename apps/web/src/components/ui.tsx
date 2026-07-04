@@ -1,7 +1,10 @@
-import { type ButtonHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from "react";
+import { useId, type ButtonHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { type VerdictKind, type WarningSeverity } from "@domus-scope/engine";
+import { type VerdictKind, type WarningId, type WarningSeverity } from "@domus-scope/engine";
+import { useLocale } from "../i18n";
+import { type HelpTopicId } from "../i18n/help";
 import { CloseIcon, AlertIcon, CheckIcon, InfoIcon } from "./Icons";
+import { InfoDot } from "./InfoDot";
 
 /* ---------- Buttons ---------- */
 
@@ -28,9 +31,17 @@ export function Button({
 
 /* ---------- Card ---------- */
 
-export function Card({ className = "", children }: { className?: string; children: ReactNode }) {
+export function Card({
+  className = "",
+  id,
+  children,
+}: {
+  className?: string;
+  id?: string;
+  children: ReactNode;
+}) {
   return (
-    <div className={`rounded-xl border border-edge bg-surface shadow-sm ${className}`}>
+    <div id={id} className={`rounded-xl border border-edge bg-surface shadow-sm ${className}`}>
       {children}
     </div>
   );
@@ -38,8 +49,26 @@ export function Card({ className = "", children }: { className?: string; childre
 
 /* ---------- Form fields ---------- */
 
-export function FieldLabel({ children }: { children: ReactNode }) {
-  return <span className="mb-1 block text-xs font-medium text-ink-2">{children}</span>;
+/**
+ * The ⓘ button must live OUTSIDE the <label> element: a label's implicit
+ * control is its first labelable descendant, and a button inside would steal
+ * the association from the input. Hence explicit htmlFor + id everywhere.
+ */
+export function FieldLabel({
+  children,
+  help,
+  htmlFor,
+}: {
+  children: ReactNode;
+  help?: HelpTopicId | undefined;
+  htmlFor?: string | undefined;
+}) {
+  return (
+    <span className="mb-1 flex items-center gap-1.5 text-xs font-medium text-ink-2">
+      <label htmlFor={htmlFor}>{children}</label>
+      {help ? <InfoDot topic={help} /> : null}
+    </span>
+  );
 }
 
 export function NumberField({
@@ -50,6 +79,7 @@ export function NumberField({
   step,
   min,
   id,
+  help,
 }: {
   label: string;
   value: number;
@@ -58,13 +88,18 @@ export function NumberField({
   step?: number;
   min?: number;
   id?: string;
+  help?: HelpTopicId;
 }) {
+  const generatedId = useId();
+  const inputId = id ?? generatedId;
   return (
-    <label className="block" htmlFor={id}>
-      <FieldLabel>{label}</FieldLabel>
+    <div className="block">
+      <FieldLabel help={help} htmlFor={inputId}>
+        {label}
+      </FieldLabel>
       <div className="flex items-center gap-2">
         <input
-          id={id}
+          id={inputId}
           type="number"
           className="nums w-full rounded-lg border border-hairline bg-surface px-3 py-2 text-sm text-ink focus-visible:outline-2 focus-visible:outline-rent"
           value={Number.isFinite(value) ? value : ""}
@@ -74,7 +109,7 @@ export function NumberField({
         />
         {suffix ? <span className="w-10 shrink-0 text-xs text-ink-3">{suffix}</span> : null}
       </div>
-    </label>
+    </div>
   );
 }
 
@@ -82,18 +117,25 @@ export function SelectField({
   label,
   children,
   className = "",
+  help,
+  id,
   ...props
-}: SelectHTMLAttributes<HTMLSelectElement> & { label: string }) {
+}: SelectHTMLAttributes<HTMLSelectElement> & { label: string; help?: HelpTopicId }) {
+  const generatedId = useId();
+  const selectId = id ?? generatedId;
   return (
-    <label className="block">
-      <FieldLabel>{label}</FieldLabel>
+    <div className="block">
+      <FieldLabel help={help} htmlFor={selectId}>
+        {label}
+      </FieldLabel>
       <select
+        id={selectId}
         className={`w-full cursor-pointer rounded-lg border border-hairline bg-surface px-3 py-2 text-sm text-ink focus-visible:outline-2 focus-visible:outline-rent ${className}`}
         {...props}
       >
         {children}
       </select>
-    </label>
+    </div>
   );
 }
 
@@ -130,6 +172,7 @@ export function PercentField({
   onChange,
   step = 0.05,
   min = 0,
+  help,
 }: {
   label: string;
   /** Fraction, engine-style: 0.034 = 3.4%. */
@@ -137,6 +180,7 @@ export function PercentField({
   onChange: (fraction: number) => void;
   step?: number;
   min?: number;
+  help?: HelpTopicId;
 }) {
   return (
     <NumberField
@@ -146,6 +190,7 @@ export function PercentField({
       step={step}
       min={min}
       onChange={(percent) => onChange(percent / 100)}
+      {...(help ? { help } : {})}
     />
   );
 }
@@ -212,21 +257,24 @@ export function Segmented<T extends string>({
 
 /* ---------- Verdict chip ---------- */
 
-export const VERDICT_META: Record<VerdictKind, { label: string; className: string }> = {
-  BUY_MORTGAGE: { label: "Buy (mortgage)", className: "bg-buy/15 text-buy border-buy/40" },
-  BUY_CASH: { label: "Buy (cash)", className: "bg-cash/15 text-cash border-cash/40" },
-  RENT: { label: "Rent", className: "bg-rent/15 text-rent border-rent/40" },
-  GREY_ZONE: { label: "Grey zone", className: "bg-greyzone/15 text-ink-2 border-greyzone/40" },
+/** Verdict entity styling; labels come from the dictionary (`verdict.<kind>`). */
+export const VERDICT_META: Record<VerdictKind, { className: string }> = {
+  BUY_MORTGAGE: { className: "bg-buy/15 text-buy border-buy/40" },
+  BUY_CASH: { className: "bg-cash/15 text-cash border-cash/40" },
+  RENT: { className: "bg-rent/15 text-rent border-rent/40" },
+  GREY_ZONE: { className: "bg-greyzone/15 text-ink-2 border-greyzone/40" },
 };
 
 export function VerdictChip({ kind, indicative }: { kind: VerdictKind; indicative?: boolean }) {
-  const meta = VERDICT_META[kind];
+  const { t } = useLocale();
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold ${meta.className}`}
+      className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold ${VERDICT_META[kind].className}`}
     >
-      {meta.label}
-      {indicative ? <span className="font-normal opacity-75">· indicative</span> : null}
+      {t(`verdict.${kind}`)}
+      {indicative ? (
+        <span className="font-normal opacity-75">· {t("verdict.indicative")}</span>
+      ) : null}
     </span>
   );
 }
@@ -234,34 +282,28 @@ export function VerdictChip({ kind, indicative }: { kind: VerdictKind; indicativ
 /* ---------- Fragility badge (icon + label, never color alone) ---------- */
 
 export function FragilityBadge({ rating }: { rating: "solid" | "sensitive" | "fragile" }) {
+  const { t } = useLocale();
   const meta =
     rating === "solid"
-      ? { label: "Solid", className: "border-good/40 text-good", Icon: CheckIcon }
+      ? { className: "border-good/40 text-good", Icon: CheckIcon }
       : rating === "sensitive"
-        ? { label: "Sensitive", className: "border-serious/40 text-serious", Icon: AlertIcon }
-        : { label: "Fragile", className: "border-critical/40 text-critical", Icon: AlertIcon };
+        ? { className: "border-serious/40 text-serious", Icon: AlertIcon }
+        : { className: "border-critical/40 text-critical", Icon: AlertIcon };
   const Icon = meta.Icon;
   return (
     <span
-      title="Share of sensitivity perturbations that flip the verdict"
+      title={t("fragility.title")}
       className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium ${meta.className}`}
     >
-      <Icon width={12} height={12} /> {meta.label}
+      <Icon width={12} height={12} /> {t(`fragility.${rating}`)}
     </span>
   );
 }
 
 /* ---------- Warning badge (status colors: icon + label, never color alone) ---------- */
 
-export function WarningBadge({
-  id,
-  severity,
-  message,
-}: {
-  id: string;
-  severity: WarningSeverity;
-  message: string;
-}) {
+export function WarningBadge({ id, severity }: { id: WarningId; severity: WarningSeverity }) {
+  const { t } = useLocale();
   const Icon = severity === "info" ? InfoIcon : AlertIcon;
   const tone =
     severity === "strong"
@@ -273,7 +315,8 @@ export function WarningBadge({
     <div className={`flex items-start gap-2 rounded-lg border px-3 py-2 text-xs ${tone}`}>
       <Icon className="mt-0.5 shrink-0" />
       <div>
-        <span className="font-semibold">{id}</span> <span className="text-ink-2">{message}</span>
+        <span className="font-semibold">{id}</span>{" "}
+        <span className="text-ink-2">{t(`warning.${id}`)}</span>
       </div>
     </div>
   );
@@ -306,6 +349,7 @@ export function ConfirmDialog({
   confirmLabel: string;
   onConfirm: () => void;
 }) {
+  const { t } = useLocale();
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
@@ -314,7 +358,7 @@ export function ConfirmDialog({
           <div className="flex items-start justify-between gap-4">
             <Dialog.Title className="text-sm font-semibold text-ink">{title}</Dialog.Title>
             <Dialog.Close asChild>
-              <Button aria-label="Close" className="-mt-1 -mr-2 px-2">
+              <Button aria-label={t("common.close")} className="-mt-1 -mr-2 px-2">
                 <CloseIcon />
               </Button>
             </Dialog.Close>
@@ -322,7 +366,7 @@ export function ConfirmDialog({
           <Dialog.Description className="mt-2 text-sm text-ink-2">{description}</Dialog.Description>
           <div className="mt-4 flex justify-end gap-2">
             <Dialog.Close asChild>
-              <Button>Cancel</Button>
+              <Button>{t("common.cancel")}</Button>
             </Dialog.Close>
             <Button
               variant="danger"

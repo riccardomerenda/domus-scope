@@ -91,7 +91,8 @@ domus-scope/
 
 ## Status
 
-**All six roadmap phases complete.** The blueprint question of the source document (§21)
+**All six roadmap phases complete, plus a localization & guidance pass (Phase 7).**
+The blueprint question of the source document (§21)
 — _"given this house, this rent, this mortgage and my liquidity, when does buying beat
 renting, and how fragile is that conclusion?"_ — is answerable end-to-end, printable,
 and remembered:
@@ -112,8 +113,15 @@ and remembered:
   disclaimer and single-scenario JSON export, and **PWA** packaging (installable,
   offline-capable). Storage schema v3 with cascading deletes; v1/v2 exports still
   import.
+- **Phase 7**: **bilingual UI (English / Italiano)** on a typed, dependency-free
+  dictionary — a missing translation is a compile error — with a language switcher in
+  Settings (Auto / English / Italiano); **field-level help**: every input carries a ⓘ
+  popover explaining what it is, why it matters, typical Italian values, common
+  pitfalls, and the _direction_ of its effect on the verdict; and a **Glossary** page
+  (`/help`) collecting the same 33 topics. Numbers and dates stay it-IT in both
+  languages by design (spec G12).
 
-79 unit/component tests green plus a **Playwright smoke** that drives the whole journey
+87 unit/component tests green plus a **Playwright smoke** that drives the whole journey
 in a real browser (create → verdict → full analysis → decision → reload → remembered):
 `pnpm --filter @domus-scope/web e2e`.
 

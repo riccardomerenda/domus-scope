@@ -12,6 +12,7 @@ import {
 import { quickToAnalytical, setMode, updateScenario } from "../../persistence/scenarios";
 import { assessQuickData, engineConfigFor, runSimulation } from "../../lib/assess";
 import { useDebouncedSave } from "../../lib/hooks";
+import { useLocale } from "../../i18n";
 import { Button, Segmented } from "../../components/ui";
 import { ArrowRightIcon } from "../../components/Icons";
 import { QuickForm } from "./QuickForm";
@@ -31,23 +32,29 @@ export function ScenarioPage() {
 
   if (scenario === undefined) return null; // loading
   if (!scenario) {
-    return (
-      <div className="py-16 text-center text-sm text-ink-2">
-        Scenario not found.{" "}
-        <Link to="/" className="font-medium text-ink underline underline-offset-4">
-          Back to dashboard
-        </Link>
-      </div>
-    );
+    return <ScenarioNotFound />;
   }
   // key: reseed local state when navigating between scenarios or switching mode.
   return <ScenarioEditor key={`${scenario.id}:${scenario.mode}`} scenario={scenario} />;
 }
 
+function ScenarioNotFound() {
+  const { t } = useLocale();
+  return (
+    <div className="py-16 text-center text-sm text-ink-2">
+      {t("scenario.notFound")}{" "}
+      <Link to="/" className="font-medium text-ink underline underline-offset-4">
+        {t("scenario.backToDashboard")}
+      </Link>
+    </div>
+  );
+}
+
 function ScenarioEditor({ scenario }: { scenario: StoredScenario }) {
+  const { t } = useLocale();
   const [title, setTitle] = useState(scenario.title);
   useDebouncedSave(
-    () => void updateScenario(scenario.id, { title: title.trim() || "Untitled" }),
+    () => void updateScenario(scenario.id, { title: title.trim() || t("scenario.untitled") }),
     [title, scenario.id],
   );
 
@@ -58,17 +65,17 @@ function ScenarioEditor({ scenario }: { scenario: StoredScenario }) {
           to="/"
           className="rounded text-sm text-ink-3 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rent"
         >
-          ← Scenarios
+          {t("scenario.back")}
         </Link>
         <input
-          aria-label="Scenario title"
+          aria-label={t("scenario.titleAria")}
           value={title}
           onChange={(event) => setTitle(event.target.value)}
           className="min-w-0 flex-1 rounded-lg border border-transparent bg-transparent px-2 py-1 text-lg font-semibold tracking-tight text-ink hover:border-hairline focus-visible:border-hairline focus-visible:outline-2 focus-visible:outline-rent"
         />
         {scenario.archived ? (
           <span className="rounded-full border border-hairline px-2 py-0.5 text-xs text-ink-3">
-            archived
+            {t("scenario.archived")}
           </span>
         ) : null}
       </div>
@@ -83,6 +90,7 @@ function ScenarioEditor({ scenario }: { scenario: StoredScenario }) {
 }
 
 function QuickEditor({ scenario }: { scenario: StoredScenario }) {
+  const { t } = useLocale();
   const [quick, setQuick] = useState<QuickData>(scenario.quick);
   const assessment = useMemo(() => assessQuickData(quick), [quick]);
   useDebouncedSave(() => void updateScenario(scenario.id, { quick }), [quick, scenario.id]);
@@ -95,7 +103,7 @@ function QuickEditor({ scenario }: { scenario: StoredScenario }) {
           <QuickResultsPanel assessment={assessment} />
           <div className="mt-4 flex justify-end">
             <Button variant="primary" onClick={() => void setMode(scenario.id, "analytical")}>
-              Deepen with full analysis <ArrowRightIcon />
+              {t("scenario.deepen")} <ArrowRightIcon />
             </Button>
           </div>
         </div>
@@ -105,6 +113,7 @@ function QuickEditor({ scenario }: { scenario: StoredScenario }) {
 }
 
 function AnalyticalWorkspace({ scenario }: { scenario: StoredScenario }) {
+  const { t } = useLocale();
   // undefined = loading; null = no stored config (fall back to defaults).
   const storedConfig = useLiveQuery(async () => (await db.appConfig.get("app")) ?? null, []);
   const [data, setData] = useState<AnalyticalData>(
@@ -134,12 +143,12 @@ function AnalyticalWorkspace({ scenario }: { scenario: StoredScenario }) {
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="w-[30rem] max-w-full">
           <Segmented
-            label="Workspace tab"
+            label={t("scenario.tabAria")}
             options={[
-              { value: "inputs", label: "Inputs" },
-              { value: "results", label: "Results" },
-              { value: "sensitivity", label: "Sensitivity" },
-              { value: "journal", label: "Journal" },
+              { value: "inputs", label: t("scenario.tab.inputs") },
+              { value: "results", label: t("scenario.tab.results") },
+              { value: "sensitivity", label: t("scenario.tab.sensitivity") },
+              { value: "journal", label: t("scenario.tab.journal") },
             ]}
             value={tab}
             onChange={setTab}
@@ -150,9 +159,11 @@ function AnalyticalWorkspace({ scenario }: { scenario: StoredScenario }) {
             to={`/scenario/${scenario.id}/report`}
             className="rounded-lg px-3 py-1.5 text-sm font-medium text-ink-2 transition-colors hover:bg-hairline/60 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rent"
           >
-            Report
+            {t("scenario.report")}
           </Link>
-          <Button onClick={() => void setMode(scenario.id, "quick")}>← Quick view</Button>
+          <Button onClick={() => void setMode(scenario.id, "quick")}>
+            {t("scenario.quickView")}
+          </Button>
         </div>
       </div>
 

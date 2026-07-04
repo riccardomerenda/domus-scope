@@ -14,33 +14,33 @@ import {
   type AppConfig,
   type PartialAssumptions,
 } from "../../persistence/db";
-import { FACTOR_LABELS } from "../../lib/qualitative";
 import { formatPercent } from "../../lib/format";
+import { useLocale } from "../../i18n";
+import { type HelpTopicId } from "../../i18n/help";
 import { Button, Card, NumberField, PercentField } from "../../components/ui";
+import { InfoDot } from "../../components/InfoDot";
 import { CloseIcon, PlusIcon, TrashIcon } from "../../components/Icons";
 
-const ASSUMPTION_FIELDS: { key: keyof EconomicAssumptions; label: string }[] = [
-  { key: "alternativeReturn", label: "Alternative return (net, r_alt)" },
-  { key: "homeAppreciation", label: "Home appreciation (g)" },
-  { key: "rentGrowth", label: "Rent growth" },
-  { key: "inflation", label: "Inflation" },
-  { key: "capitalGainsTax", label: "Capital gains tax" },
-  { key: "maintenanceRate", label: "Maintenance (% of value / year)" },
-  { key: "recurringTaxRate", label: "Recurring ownership taxes (% of value / year)" },
+const ASSUMPTION_KEYS: (keyof EconomicAssumptions & HelpTopicId)[] = [
+  "alternativeReturn",
+  "homeAppreciation",
+  "rentGrowth",
+  "inflation",
+  "capitalGainsTax",
+  "maintenanceRate",
+  "recurringTaxRate",
 ];
 
 export function ProfilePage() {
+  const { t } = useLocale();
   const stored = useLiveQuery(() => db.appConfig.get("app"), []);
   if (stored === undefined) return null;
   const config = mergeAppConfig(stored);
   return (
     <div className="max-w-2xl space-y-4">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight text-ink">Profile & Assumptions</h1>
-        <p className="mt-0.5 text-sm text-ink-2">
-          Your personal constraints and the global assumption layer every scenario inherits
-          (scenarios can still override each value).
-        </p>
+        <h1 className="text-xl font-semibold tracking-tight text-ink">{t("profile.title")}</h1>
+        <p className="mt-0.5 text-sm text-ink-2">{t("profile.subtitle")}</p>
       </div>
       <ProfileCard config={config} />
       <GlobalAssumptionsCard config={config} />
@@ -51,6 +51,7 @@ export function ProfilePage() {
 }
 
 function WeightsCard({ config }: { config: AppConfig }) {
+  const { t } = useLocale();
   const setWeight = (factor: (typeof QUALITATIVE_FACTORS)[number], value: number) =>
     void updateAppConfig({
       qualitativeWeights: { ...config.qualitativeWeights, [factor]: value },
@@ -58,16 +59,16 @@ function WeightsCard({ config }: { config: AppConfig }) {
 
   return (
     <Card className="p-4">
-      <h2 className="text-sm font-semibold text-ink">What matters to you (BR-015)</h2>
-      <p className="mt-1 text-xs text-ink-3">
-        Weights for the qualitative factors (0 = irrelevant, 10 = decisive). They shape the
-        preference index shown beside — never mixed with — the financial verdict.
-      </p>
+      <h2 className="flex items-center gap-1.5 text-sm font-semibold text-ink">
+        {t("profile.weights")}
+        <InfoDot topic="weights" />
+      </h2>
+      <p className="mt-1 text-xs text-ink-3">{t("profile.weightsHint")}</p>
       <div className="mt-3 grid gap-x-6 gap-y-3 sm:grid-cols-2">
         {QUALITATIVE_FACTORS.map((factor) => (
           <label key={factor} className="block">
             <span className="mb-1 flex items-center justify-between text-xs font-medium text-ink-2">
-              {FACTOR_LABELS[factor]}
+              {t(`factor.${factor}`)}
               <span className="nums text-ink-3">{config.qualitativeWeights[factor]}</span>
             </span>
             <input
@@ -87,43 +88,45 @@ function WeightsCard({ config }: { config: AppConfig }) {
 }
 
 function ProfileCard({ config }: { config: AppConfig }) {
+  const { t } = useLocale();
   const { profile } = config;
   const set = (patch: Partial<AppConfig["profile"]>) =>
     void updateAppConfig({ profile: { ...profile, ...patch } });
 
   return (
     <Card className="p-4">
-      <h2 className="text-sm font-semibold text-ink">Personal profile (FR-002)</h2>
-      <p className="mt-1 text-xs text-ink-3">
-        Used by the liquidity warnings: buying must not push you below your emergency fund (BR-006).
-      </p>
+      <h2 className="text-sm font-semibold text-ink">{t("profile.personal")}</h2>
+      <p className="mt-1 text-xs text-ink-3">{t("profile.personalHint")}</p>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         <NumberField
-          label="Available savings"
-          suffix="€"
+          label={t("profile.liquidity")}
+          suffix={t("suffix.eur")}
           value={profile.liquidity}
           min={0}
           step={5_000}
+          help="liquidityCheck"
           onChange={(v) => set({ liquidity: v })}
         />
         <NumberField
-          label="Emergency fund (minimum)"
-          suffix="€"
+          label={t("profile.fund")}
+          suffix={t("suffix.eur")}
           value={profile.emergencyFund}
           min={0}
           step={1_000}
+          help="emergencyFund"
           onChange={(v) => set({ emergencyFund: v })}
         />
         <NumberField
-          label="Current rent (informative)"
-          suffix="€/mo"
+          label={t("profile.currentRent")}
+          suffix={t("suffix.eurPerMonth")}
           value={profile.currentMonthlyRent ?? Number.NaN}
           min={0}
           step={50}
+          help="currentRent"
           onChange={(v) => set({ currentMonthlyRent: Number.isFinite(v) ? v : null })}
         />
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-ink-2">City</span>
+          <span className="mb-1 block text-xs font-medium text-ink-2">{t("profile.city")}</span>
           <input
             className="w-full rounded-lg border border-hairline bg-surface px-3 py-2 text-sm text-ink focus-visible:outline-2 focus-visible:outline-rent"
             value={profile.city}
@@ -136,6 +139,7 @@ function ProfileCard({ config }: { config: AppConfig }) {
 }
 
 function GlobalAssumptionsCard({ config }: { config: AppConfig }) {
+  const { t } = useLocale();
   const resolved = resolveAssumptions(config.globalAssumptions);
 
   const setValue = (key: keyof EconomicAssumptions, fraction: number) => {
@@ -151,18 +155,20 @@ function GlobalAssumptionsCard({ config }: { config: AppConfig }) {
 
   return (
     <Card className="p-4">
-      <h2 className="text-sm font-semibold text-ink">Global assumptions</h2>
-      <p className="mt-1 text-xs text-ink-3">
-        Values you set here override the engine defaults (NFR-005: provenance is always shown).
-      </p>
+      <h2 className="flex items-center gap-1.5 text-sm font-semibold text-ink">
+        {t("profile.global")}
+        <InfoDot topic="provenance" />
+      </h2>
+      <p className="mt-1 text-xs text-ink-3">{t("profile.globalHint")}</p>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
-        {ASSUMPTION_FIELDS.map(({ key, label }) => {
+        {ASSUMPTION_KEYS.map((key) => {
           const source = resolved.provenance[key];
           return (
             <div key={key}>
               <PercentField
-                label={label}
+                label={t(`assumption.${key}`)}
                 value={resolved.values[key]}
+                help={key}
                 onChange={(fraction) => setValue(key, fraction)}
               />
               <div className="mt-1 flex items-center gap-2 text-[11px]">
@@ -173,7 +179,9 @@ function GlobalAssumptionsCard({ config }: { config: AppConfig }) {
                     onClick={() => clearValue(key)}
                     className="cursor-pointer text-ink-3 underline decoration-dotted underline-offset-2 hover:text-ink"
                   >
-                    reset to default ({formatPercent(defaultAssumptions[key], 2)})
+                    {t("profile.resetDefault", {
+                      value: formatPercent(defaultAssumptions[key], 2),
+                    })}
                   </button>
                 ) : null}
               </div>
@@ -186,20 +194,22 @@ function GlobalAssumptionsCard({ config }: { config: AppConfig }) {
 }
 
 export function ProvenanceBadge({ source }: { source: "engine-default" | "global" | "scenario" }) {
-  const meta =
+  const { t } = useLocale();
+  const className =
     source === "scenario"
-      ? { label: "scenario override", className: "border-cash/40 text-cash" }
+      ? "border-cash/40 text-cash"
       : source === "global"
-        ? { label: "your global value", className: "border-rent/40 text-rent" }
-        : { label: "engine default", className: "border-hairline text-ink-3" };
+        ? "border-rent/40 text-rent"
+        : "border-hairline text-ink-3";
   return (
-    <span className={`rounded-full border px-1.5 py-0.5 text-[10px] font-medium ${meta.className}`}>
-      {meta.label}
+    <span className={`rounded-full border px-1.5 py-0.5 text-[10px] font-medium ${className}`}>
+      {t(`provenance.${source}`)}
     </span>
   );
 }
 
 function PresetsCard({ config }: { config: AppConfig }) {
+  const { t } = useLocale();
   const [newLabel, setNewLabel] = useState("");
 
   const applyPreset = (values: PartialAssumptions) =>
@@ -222,10 +232,11 @@ function PresetsCard({ config }: { config: AppConfig }) {
 
   return (
     <Card className="p-4">
-      <h2 className="text-sm font-semibold text-ink">Assumption presets (FR-018)</h2>
-      <p className="mt-1 text-xs text-ink-3">
-        Presets are starting points, not predictions. Applying one replaces the global layer.
-      </p>
+      <h2 className="flex items-center gap-1.5 text-sm font-semibold text-ink">
+        {t("profile.presets")}
+        <InfoDot topic="assumptionPreset" />
+      </h2>
+      <p className="mt-1 text-xs text-ink-3">{t("profile.presetsHint")}</p>
 
       <div className="mt-3 space-y-2">
         {Object.values(assumptionPresets).map((preset) => (
@@ -234,10 +245,10 @@ function PresetsCard({ config }: { config: AppConfig }) {
             className="flex items-center justify-between gap-3 rounded-lg border border-hairline px-3 py-2"
           >
             <div>
-              <div className="text-sm font-medium text-ink">{preset.label}</div>
-              <div className="text-xs text-ink-3">{preset.description}</div>
+              <div className="text-sm font-medium text-ink">{t(`preset.${preset.id}`)}</div>
+              <div className="text-xs text-ink-3">{t(`preset.${preset.id}.desc`)}</div>
             </div>
-            <Button onClick={() => applyPreset(preset.values)}>Apply</Button>
+            <Button onClick={() => applyPreset(preset.values)}>{t("common.apply")}</Button>
           </div>
         ))}
         {config.userPresets.map((preset) => (
@@ -252,15 +263,15 @@ function PresetsCard({ config }: { config: AppConfig }) {
                   .flatMap(([key, value]) =>
                     value === undefined ? [] : [`${key} ${formatPercent(value, 1)}`],
                   )
-                  .join(" · ") || "empty (engine defaults)"}
+                  .join(" · ") || t("profile.emptyPreset")}
               </div>
             </div>
             <div className="flex items-center gap-1">
-              <Button onClick={() => applyPreset(preset.values)}>Apply</Button>
+              <Button onClick={() => applyPreset(preset.values)}>{t("common.apply")}</Button>
               <Button
                 variant="danger"
                 className="px-2"
-                aria-label={`Delete preset ${preset.label}`}
+                aria-label={t("profile.deletePreset", { label: preset.label })}
                 onClick={() => deletePreset(preset.id)}
               >
                 <TrashIcon width={14} height={14} />
@@ -274,15 +285,19 @@ function PresetsCard({ config }: { config: AppConfig }) {
         <input
           value={newLabel}
           onChange={(event) => setNewLabel(event.target.value)}
-          placeholder="Preset name…"
-          aria-label="New preset name"
+          placeholder={t("profile.presetName")}
+          aria-label={t("profile.presetNameAria")}
           className="w-48 rounded-lg border border-hairline bg-surface px-3 py-1.5 text-sm text-ink focus-visible:outline-2 focus-visible:outline-rent"
         />
         <Button onClick={saveCurrentAsPreset} disabled={newLabel.trim() === ""}>
-          <PlusIcon /> Save current as preset
+          <PlusIcon /> {t("profile.savePreset")}
         </Button>
         {newLabel ? (
-          <Button className="px-2" aria-label="Clear preset name" onClick={() => setNewLabel("")}>
+          <Button
+            className="px-2"
+            aria-label={t("profile.clearPresetName")}
+            onClick={() => setNewLabel("")}
+          >
             <CloseIcon width={14} height={14} />
           </Button>
         ) : null}

@@ -9,8 +9,9 @@ import {
 import { type FragilityRating } from "@domus-scope/engine";
 import { type QualitativeScores, type QualitativeWeights } from "../../../persistence/db";
 import { type SimulationOutcome } from "../../../lib/assess";
-import { FACTOR_LABELS, preferenceIndex } from "../../../lib/qualitative";
+import { preferenceIndex } from "../../../lib/qualitative";
 import { formatEUR, formatEURSigned, formatNumber } from "../../../lib/format";
+import { isMessageKey, useLocale } from "../../../i18n";
 import {
   Card,
   FragilityBadge,
@@ -46,10 +47,11 @@ export function ResultsPanel({
   fragility?: FragilityRating | undefined;
   epilogue?: EpilogueData | undefined;
 }) {
+  const { t } = useLocale();
   if (outcome.issues) {
     return (
       <Card className="p-4">
-        <h2 className="text-sm font-semibold text-ink">Fix the inputs to see results</h2>
+        <h2 className="text-sm font-semibold text-ink">{t("results.fixInputs")}</h2>
         <ul className="mt-3 space-y-1.5 text-sm text-critical">
           {outcome.issues.map((issue) => (
             <li key={`${issue.path}:${issue.message}`}>
@@ -82,10 +84,13 @@ function Results({
   fragility?: FragilityRating | undefined;
   epilogue?: EpilogueData | undefined;
 }) {
+  const { t } = useLocale();
   const [basis, setBasis] = useState<"hold" | "liquidation">(result.summary.basis);
   const [real, setReal] = useState(false);
 
   const deflate = (value: number, deflator: number) => (real ? value / deflator : value);
+  const basisLabel = t(`results.basis.${basis}`);
+  const realSuffix = real ? t("results.lens.real") : "";
 
   const costRows = useMemo(
     () =>
@@ -177,6 +182,7 @@ function Results({
     : 0;
 
   const advantageReason = result.verdict.reasons.find((reason) => reason.id === "wealth.advantage");
+  const advantageReasonKey = advantageReason ? `reason.${advantageReason.id}` : null;
 
   return (
     <div className="space-y-4">
@@ -189,26 +195,28 @@ function Results({
           />
           {fragility ? <FragilityBadge rating={fragility} /> : null}
           <span className="nums text-sm text-ink-2">
-            Buying leaves you{" "}
+            {t("results.banner")}{" "}
             <strong className={advantage >= 0 ? "text-good" : "text-critical"}>
               {formatEURSigned(advantage)}
             </strong>{" "}
-            vs renting after {result.horizonYears} years ({basis} basis
-            {real ? ", real terms" : ""}).
+            {t("results.bannerRest", {
+              years: result.horizonYears,
+              basis: basisLabel,
+              real: real ? t("results.bannerReal") : "",
+            })}
           </span>
         </div>
-        {advantageReason ? (
-          <p className="mt-2 text-sm leading-relaxed text-ink-2">{advantageReason.message}</p>
+        {advantageReasonKey ? (
+          <p className="mt-2 text-sm leading-relaxed text-ink-2">
+            {isMessageKey(advantageReasonKey)
+              ? t(advantageReasonKey)
+              : (advantageReason?.message ?? "")}
+          </p>
         ) : null}
         {result.warnings.length > 0 ? (
           <div className="mt-3 space-y-2">
             {result.warnings.map((warning) => (
-              <WarningBadge
-                key={warning.id}
-                id={warning.id}
-                severity={warning.severity}
-                message={warning.message}
-              />
+              <WarningBadge key={warning.id} id={warning.id} severity={warning.severity} />
             ))}
           </div>
         ) : null}
@@ -218,43 +226,56 @@ function Results({
       <div className="flex flex-wrap items-center gap-4">
         <div className="w-56">
           <Segmented
-            label="Basis"
+            label={t("results.basisAria")}
             options={[
-              { value: "liquidation", label: "If sold" },
-              { value: "hold", label: "If held" },
+              { value: "liquidation", label: t("results.ifSold") },
+              { value: "hold", label: t("results.ifHeld") },
             ]}
             value={basis}
             onChange={setBasis}
           />
         </div>
-        <ToggleField label="Real terms (deflated by inflation)" checked={real} onChange={setReal} />
+        <ToggleField label={t("results.realToggle")} checked={real} onChange={setReal} />
       </div>
 
       {/* KPI row */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         <StatTile
-          label="Year-1 cost — rent"
+          label={t("results.kpi.year1Rent")}
           value={formatEUR(result.summary.yearOneUnrecoverableRent)}
         />
         <StatTile
-          label="Year-1 cost — buy"
+          label={t("results.kpi.year1Buy")}
           value={formatEUR(result.summary.yearOneUnrecoverableBuy)}
         />
         <StatTile
-          label={`Break-even (wealth, ${basis})`}
-          value={breakEvenWealth !== null ? `year ${breakEvenWealth}` : "beyond horizon"}
+          label={t("results.kpi.beWealth", { basis: basisLabel })}
+          value={
+            breakEvenWealth !== null
+              ? t("common.yearN", { n: breakEvenWealth })
+              : t("common.beyondHorizon")
+          }
         />
         <StatTile
-          label={`Break-even (costs, ${basis})`}
-          value={breakEvenCost !== null ? `year ${breakEvenCost}` : "beyond horizon"}
+          label={t("results.kpi.beCost", { basis: basisLabel })}
+          value={
+            breakEvenCost !== null
+              ? t("common.yearN", { n: breakEvenCost })
+              : t("common.beyondHorizon")
+          }
         />
         <StatTile
-          label={`Advantage @ ${result.horizonYears}y${real ? " (real)" : ""}`}
+          label={t("results.kpi.advantage", {
+            years: result.horizonYears,
+            real: real ? t("results.kpi.advantageReal") : "",
+          })}
           value={formatEURSigned(advantage)}
           tone={advantage >= 0 ? "good" : "bad"}
           sub={
             result.summary.liquidityAfterPurchase !== null
-              ? `liquidity after purchase ${formatEUR(result.summary.liquidityAfterPurchase)}`
+              ? t("results.kpi.liquidityAfter", {
+                  amount: formatEUR(result.summary.liquidityAfterPurchase),
+                })
               : undefined
           }
         />
@@ -263,50 +284,50 @@ function Results({
       {/* Charts */}
       <div className="grid gap-4 lg:grid-cols-2">
         <ChartCard
-          title="Cumulative unrecoverable costs"
-          lens={`cost lens · ${basis}${real ? " · real" : ""}`}
-          description="What each path burns, year after year — the money that never comes back."
+          title={t("results.chart.costs")}
+          lens={t("results.lens.cost", { basis: basisLabel, real: realSuffix })}
+          description={t("results.chart.costsDesc")}
         >
           <RentVsBuyLines rows={costRows} />
         </ChartCard>
         <ChartCard
-          title="Net worth over time"
-          lens={`wealth lens · ${basis}${real ? " · real" : ""}`}
-          description="Same starting capital, same monthly budget: who is richer at each year-end."
+          title={t("results.chart.wealth")}
+          lens={t("results.lens.wealth", { basis: basisLabel, real: realSuffix })}
+          description={t("results.chart.wealthDesc")}
         >
           <RentVsBuyLines rows={wealthRows} />
         </ChartCard>
         <ChartCard
-          title="If you sold in year t"
-          lens={`wealth lens · ${basis}${real ? " · real" : ""}`}
-          description="The signature question: net advantage of having bought, if you liquidated at each year."
+          title={t("results.chart.advantage")}
+          lens={t("results.lens.wealth", { basis: basisLabel, real: realSuffix })}
+          description={t("results.chart.advantageDesc")}
         >
           <AdvantageBars rows={advantageRows} />
         </ChartCard>
         {anatomyRows ? (
           <ChartCard
-            title="Mortgage anatomy"
-            lens="exact schedule"
-            description="Each year's payments split into interest (a cost) and principal (your wealth, BR-008)."
+            title={t("results.chart.anatomy")}
+            lens={t("results.lens.exact")}
+            description={t("results.chart.anatomyDesc")}
           >
             <MortgageAnatomyBars rows={anatomyRows} />
           </ChartCard>
         ) : null}
         <ChartCard
-          title="Buy-side cost composition"
-          lens="cost lens · nominal"
-          description="What makes up the owning costs; value gains and tax credits push below zero."
+          title={t("results.chart.composition")}
+          lens={t("results.lens.nominal")}
+          description={t("results.chart.compositionDesc")}
         >
           <CostCompositionBars rows={compositionRows} />
         </ChartCard>
         <HorizonComposition
-          title="Wealth at horizon — buy"
+          title={t("results.compositionBuy")}
           breakdown={result.wealthLens.buyCompositionAtHorizon}
         />
       </div>
 
       <HorizonComposition
-        title="Wealth at horizon — rent"
+        title={t("results.compositionRent")}
         breakdown={result.wealthLens.rentCompositionAtHorizon}
         inline
       />
@@ -333,18 +354,19 @@ function Epilogue({
   advantage: number;
   basis: "hold" | "liquidation";
 }) {
+  const { t } = useLocale();
   const { index, scoredFactors } = preferenceIndex(epilogue.scores, epilogue.weights);
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       <Card className="p-4">
-        <h3 className="text-sm font-semibold text-ink">The numbers say</h3>
+        <h3 className="text-sm font-semibold text-ink">{t("results.epilogue.numbers")}</h3>
         <p className="nums mt-2 text-xl font-semibold text-ink">{formatEURSigned(advantage)}</p>
         <p className="mt-1 text-xs text-ink-3">
-          Net-worth advantage of buying at the horizon ({basis} basis). Positive favors buying.
+          {t("results.epilogue.numbersNote", { basis: t(`results.basis.${basis}`) })}
         </p>
       </Card>
       <Card className="p-4">
-        <h3 className="text-sm font-semibold text-ink">Your priorities say</h3>
+        <h3 className="text-sm font-semibold text-ink">{t("results.epilogue.priorities")}</h3>
         {index !== null ? (
           <>
             <p className="nums mt-2 text-xl font-semibold text-ink">
@@ -353,7 +375,7 @@ function Epilogue({
             <div className="mt-2 space-y-1">
               {scoredFactors.map((factor) => (
                 <div key={factor} className="flex items-center gap-2 text-xs">
-                  <span className="w-24 shrink-0 text-ink-3">{FACTOR_LABELS[factor]}</span>
+                  <span className="w-24 shrink-0 text-ink-3">{t(`factor.${factor}`)}</span>
                   <div className="h-1.5 flex-1 rounded-full bg-hairline">
                     <div
                       className="h-1.5 rounded-full bg-ink-3"
@@ -366,14 +388,9 @@ function Epilogue({
             </div>
           </>
         ) : (
-          <p className="mt-2 text-sm text-ink-3">
-            Score the qualitative factors in the Journal tab to see your preference index.
-          </p>
+          <p className="mt-2 text-sm text-ink-3">{t("results.epilogue.score")}</p>
         )}
-        <p className="mt-2 text-xs text-ink-3">
-          Deliberately kept apart from the euros: stability and flexibility are real, but they are
-          yours to weigh — not the model's (BR-015).
-        </p>
+        <p className="mt-2 text-xs text-ink-3">{t("results.epilogue.note")}</p>
       </Card>
     </div>
   );
@@ -388,11 +405,12 @@ function HorizonComposition({
   breakdown: CostBreakdown;
   inline?: boolean;
 }) {
+  const { t } = useLocale();
   return (
     <Card className="p-4">
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-sm font-semibold text-ink">{title}</h3>
-        <LensTag>wealth lens · liquidation</LensTag>
+        <LensTag>{t("results.compositionLens")}</LensTag>
       </div>
       <ul className={`mt-3 ${inline ? "grid gap-x-8 gap-y-1 sm:grid-cols-2" : "space-y-1"}`}>
         {breakdown.items.map((item) => (
@@ -405,7 +423,7 @@ function HorizonComposition({
         ))}
       </ul>
       <div className="mt-2 flex items-baseline justify-between border-t border-hairline pt-1.5 text-sm font-semibold">
-        <span className="text-ink">Total</span>
+        <span className="text-ink">{t("common.total")}</span>
         <span className="nums text-ink">{formatEUR(breakdown.total)}</span>
       </div>
     </Card>

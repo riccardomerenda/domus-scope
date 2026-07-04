@@ -185,11 +185,14 @@ export async function buildExport(): Promise<ExportFile> {
   };
 }
 
+/** Error codes; the UI maps them to localized copy (`settings.error.*`). */
+export type ImportErrorCode = "invalidJson" | "notExport";
+
 export interface ImportOutcome {
   imported: number;
   renamed: number;
   configImported: boolean;
-  error?: string;
+  error?: ImportErrorCode;
 }
 
 function parseExportFile(parsedJson: unknown): ExportFile | null {
@@ -238,23 +241,13 @@ export async function importData(raw: unknown): Promise<ImportOutcome> {
     try {
       parsedJson = JSON.parse(raw);
     } catch {
-      return {
-        imported: 0,
-        renamed: 0,
-        configImported: false,
-        error: "The file is not valid JSON.",
-      };
+      return { imported: 0, renamed: 0, configImported: false, error: "invalidJson" };
     }
   }
 
   const file = parseExportFile(parsedJson);
   if (!file) {
-    return {
-      imported: 0,
-      renamed: 0,
-      configImported: false,
-      error: "The file is not a DomusScope export.",
-    };
+    return { imported: 0, renamed: 0, configImported: false, error: "notExport" };
   }
 
   // Scenarios first; colliding ids get fresh ones and dependents are remapped.

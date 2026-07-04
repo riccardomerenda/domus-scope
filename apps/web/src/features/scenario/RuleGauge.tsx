@@ -1,5 +1,6 @@
 import { type QuickRuleAssessment } from "@domus-scope/engine";
 import { formatPercent } from "../../lib/format";
+import { useLocale } from "../../i18n";
 
 /**
  * Bullet-style gauge: the measured rent-to-price ratio R (ink marker) against
@@ -7,6 +8,7 @@ import { formatPercent } from "../../lib/format";
  * direct-labeled; text wears ink tokens, never series colors (dataviz rules).
  */
 export function RuleGauge({ rule }: { rule: QuickRuleAssessment }) {
+  const { t } = useLocale();
   const width = 600;
   const left = 14;
   const right = width - 14;
@@ -27,7 +29,11 @@ export function RuleGauge({ rule }: { rule: QuickRuleAssessment }) {
       viewBox={`0 0 ${width} 92`}
       className="w-full"
       role="img"
-      aria-label={`Rent-to-price ratio ${formatPercent(rule.rentToPrice, 1)} against the derived threshold ${formatPercent(rule.threshold, 1)} (grey band ±${formatPercent(rule.greyBand, 1)})`}
+      aria-label={t("gauge.aria", {
+        ratio: formatPercent(rule.rentToPrice, 1),
+        threshold: formatPercent(rule.threshold, 1),
+        band: formatPercent(rule.greyBand, 1),
+      })}
     >
       {/* grey band around R* */}
       <rect

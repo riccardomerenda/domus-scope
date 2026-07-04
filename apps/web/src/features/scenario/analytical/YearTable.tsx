@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { type CostLensYear, type WealthLensYear } from "@domus-scope/engine";
 import { formatEUR, formatEURSigned } from "../../../lib/format";
+import { useLocale } from "../../../i18n";
 import { Card, LensTag } from "../../../components/ui";
 import { ChevronDownIcon } from "../../../components/Icons";
 import { ExplainableNumber } from "../../explain/ExplainableNumber";
@@ -21,6 +22,7 @@ export function YearTable({
   basis: "hold" | "liquidation";
   real: boolean;
 }) {
+  const { t } = useLocale();
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
   const toggle = (year: number) =>
     setExpanded((current) => {
@@ -32,34 +34,40 @@ export function YearTable({
 
   const deflate = (value: number, deflator: number) => (real ? value / deflator : value);
 
+  const headers = [
+    t("yearTable.rentCost"),
+    t("yearTable.buyCost"),
+    t("yearTable.cumRent"),
+    t("yearTable.cumBuy"),
+    t("yearTable.value"),
+    t("yearTable.debt"),
+    t("yearTable.wealthRent"),
+    t("yearTable.wealthBuy"),
+  ];
+
   return (
     <Card className="p-4">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-ink">Year by year</h3>
+        <h3 className="text-sm font-semibold text-ink">{t("yearTable.title")}</h3>
         <div className="flex items-center gap-1.5">
-          <LensTag>both lenses</LensTag>
-          <LensTag>{basis}</LensTag>
-          {real ? <LensTag>real terms</LensTag> : null}
+          <LensTag>{t("yearTable.bothLenses")}</LensTag>
+          <LensTag>{t(`results.basis.${basis}`)}</LensTag>
+          {real ? <LensTag>{t("yearTable.realTerms")}</LensTag> : null}
         </div>
       </div>
-      <p className="mt-0.5 text-xs text-ink-3">
-        Expand a year to open every line item's formula. Expanded breakdowns are always nominal.
-      </p>
+      <p className="mt-0.5 text-xs text-ink-3">{t("yearTable.hint")}</p>
       <div className="mt-3 overflow-x-auto">
         <table className="w-full min-w-[52rem] text-sm">
           <thead>
             <tr className="border-b border-baseline text-left text-[11px] tracking-wide text-ink-3 uppercase">
               <th className="py-1.5 pr-2 font-medium" aria-label="Expand" />
-              <th className="py-1.5 pr-3 font-medium">Year</th>
-              <th className="py-1.5 pr-3 text-right font-medium">Rent cost</th>
-              <th className="py-1.5 pr-3 text-right font-medium">Buy cost</th>
-              <th className="py-1.5 pr-3 text-right font-medium">Cum. rent</th>
-              <th className="py-1.5 pr-3 text-right font-medium">Cum. buy</th>
-              <th className="py-1.5 pr-3 text-right font-medium">Value</th>
-              <th className="py-1.5 pr-3 text-right font-medium">Debt</th>
-              <th className="py-1.5 pr-3 text-right font-medium">Wealth rent</th>
-              <th className="py-1.5 pr-3 text-right font-medium">Wealth buy</th>
-              <th className="py-1.5 text-right font-medium">Advantage</th>
+              <th className="py-1.5 pr-3 font-medium">{t("yearTable.year")}</th>
+              {headers.map((header) => (
+                <th key={header} className="py-1.5 pr-3 text-right font-medium">
+                  {header}
+                </th>
+              ))}
+              <th className="py-1.5 text-right font-medium">{t("yearTable.advantage")}</th>
             </tr>
           </thead>
           <tbody className="nums">
@@ -119,6 +127,7 @@ function YearRow({
   isOpen: boolean;
   onToggle: () => void;
 }) {
+  const { t } = useLocale();
   return (
     <>
       <tr className="border-b border-hairline">
@@ -127,7 +136,7 @@ function YearRow({
             type="button"
             onClick={onToggle}
             aria-expanded={isOpen}
-            aria-label={`Toggle year ${cost.year} breakdown`}
+            aria-label={t("yearTable.expandAria", { n: cost.year })}
             className="cursor-pointer rounded p-0.5 text-ink-3 hover:text-ink focus-visible:outline-2 focus-visible:outline-rent"
           >
             <ChevronDownIcon
@@ -155,12 +164,12 @@ function YearRow({
           <td colSpan={10} className="py-3">
             <div className="grid gap-4 sm:grid-cols-2">
               <ItemList
-                title={`Rent — year ${cost.year}`}
+                title={t("yearTable.rentYear", { n: cost.year })}
                 items={cost.rent.items}
                 total={cost.rent.total}
               />
               <ItemList
-                title={`Buy — year ${cost.year}`}
+                title={t("yearTable.buyYear", { n: cost.year })}
                 items={cost.buy.items}
                 total={cost.buy.total}
               />
@@ -181,6 +190,7 @@ function ItemList({
   items: CostLensYear["rent"]["items"];
   total: number;
 }) {
+  const { t } = useLocale();
   return (
     <div>
       <h4 className="mb-1 text-xs font-semibold tracking-wide text-ink-3 uppercase">{title}</h4>
@@ -194,7 +204,7 @@ function ItemList({
           </li>
         ))}
         <li className="mt-0.5 flex items-baseline justify-between gap-3 border-t border-hairline pt-0.5 text-sm font-semibold">
-          <span className="text-ink">Total</span>
+          <span className="text-ink">{t("common.total")}</span>
           <span className="nums text-ink">{formatEUR(total)}</span>
         </li>
       </ul>

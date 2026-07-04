@@ -5,15 +5,6 @@ import {
   type QualitativeWeights,
 } from "../persistence/db";
 
-export const FACTOR_LABELS: Record<QualitativeFactor, string> = {
-  stability: "Stability",
-  flexibility: "Flexibility",
-  space: "Space",
-  school: "Schools",
-  family: "Family",
-  work: "Work & commute",
-};
-
 /**
  * Preference index (BR-015, critique W4): scores (0–10 per factor, "how much
  * would buying this home improve this for you?") weighted by personal

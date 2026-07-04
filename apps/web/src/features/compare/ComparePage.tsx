@@ -16,7 +16,8 @@ import { defaultAssumptions, type EconomicAssumptions } from "@domus-scope/engin
 import { db, mergeAppConfig, type StoredScenario } from "../../persistence/db";
 import { runSimulation, type SimulationOutcome } from "../../lib/assess";
 import { formatEUR, formatEURSigned, formatPercent } from "../../lib/format";
-import { Card, LensTag, ToggleField, VerdictChip, VERDICT_META } from "../../components/ui";
+import { useLocale } from "../../i18n";
+import { Card, LensTag, ToggleField, VerdictChip } from "../../components/ui";
 
 const MAX_SELECTION = 4;
 const SERIES_COLORS = ["var(--ds-cmp-1)", "var(--ds-cmp-2)", "var(--ds-cmp-3)", "var(--ds-cmp-4)"];
@@ -28,6 +29,7 @@ interface ComparedScenario {
 }
 
 export function ComparePage() {
+  const { t } = useLocale();
   const scenarios = useLiveQuery(() => db.scenarios.orderBy("updatedAt").reverse().toArray(), []);
   const appConfig =
     useLiveQuery(async () => mergeAppConfig(await db.appConfig.get("app")), []) ??
@@ -51,7 +53,7 @@ export function ComparePage() {
   }, [scenarios, selectedIds, appConfig]);
 
   if (!scenarios) return null;
-  const analytical = scenarios.filter((scenario) => !scenario.archived);
+  const candidates = scenarios.filter((scenario) => !scenario.archived);
 
   const toggle = (id: string, checked: boolean) =>
     setSelectedIds((current) => {
@@ -63,25 +65,22 @@ export function ComparePage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight text-ink">Compare scenarios</h1>
-        <p className="mt-0.5 text-sm text-ink-2">
-          Pick up to {MAX_SELECTION} scenarios in full-analysis mode. Differences in assumptions are
-          highlighted so you never compare apples to oranges.
-        </p>
+        <h1 className="text-xl font-semibold tracking-tight text-ink">{t("compare.title")}</h1>
+        <p className="mt-0.5 text-sm text-ink-2">{t("compare.subtitle", { max: MAX_SELECTION })}</p>
       </div>
 
       <Card className="p-4">
-        <h2 className="text-sm font-semibold text-ink">Selection</h2>
-        {analytical.length === 0 ? (
+        <h2 className="text-sm font-semibold text-ink">{t("compare.selection")}</h2>
+        {candidates.length === 0 ? (
           <p className="mt-2 text-sm text-ink-3">
-            No scenarios yet.{" "}
+            {t("compare.none")}{" "}
             <Link to="/" className="underline decoration-dotted underline-offset-2 hover:text-ink">
-              Create one from the dashboard.
+              {t("compare.createOne")}
             </Link>
           </p>
         ) : (
           <ul className="mt-2 grid gap-1.5 sm:grid-cols-2">
-            {analytical.map((scenario) => {
+            {candidates.map((scenario) => {
               const selectable = scenario.analytical !== null;
               const checked = selectedIds.includes(scenario.id);
               return (
@@ -94,8 +93,7 @@ export function ComparePage() {
                     />
                   ) : (
                     <span className="text-sm text-ink-3">
-                      {scenario.title} — quick only; open it and “Deepen with full analysis” to
-                      compare
+                      {t("compare.quickOnly", { title: scenario.title })}
                     </span>
                   )}
                 </li>
@@ -112,13 +110,14 @@ export function ComparePage() {
           <AssumptionDiff compared={compared} />
         </>
       ) : (
-        <p className="text-sm text-ink-3">Select at least two full-analysis scenarios.</p>
+        <p className="text-sm text-ink-3">{t("compare.needTwo")}</p>
       )}
     </div>
   );
 }
 
 function KpiTable({ compared }: { compared: ComparedScenario[] }) {
+  const { t } = useLocale();
   const horizons = new Set(compared.map(({ scenario }) => scenario.analytical!.horizonYears));
   const rows: {
     label: string;
@@ -126,45 +125,48 @@ function KpiTable({ compared }: { compared: ComparedScenario[] }) {
     highlight?: boolean;
   }[] = [
     {
-      label: "Price",
+      label: t("compare.price"),
       cells: compared.map(({ scenario }) => formatEUR(scenario.analytical!.property.price)),
     },
     {
-      label: "Equivalent rent",
-      cells: compared.map(
-        ({ scenario }) =>
-          `${formatEUR(scenario.analytical!.rentAlternative.equivalentMonthlyRent)}/mo`,
+      label: t("compare.rent"),
+      cells: compared.map(({ scenario }) =>
+        t("common.perMonth", {
+          amount: formatEUR(scenario.analytical!.rentAlternative.equivalentMonthlyRent),
+        }),
       ),
     },
     {
-      label: "Horizon",
-      cells: compared.map(({ scenario }) => `${scenario.analytical!.horizonYears} y`),
+      label: t("compare.horizon"),
+      cells: compared.map(
+        ({ scenario }) => `${scenario.analytical!.horizonYears} ${t("suffix.years")}`,
+      ),
       highlight: horizons.size > 1,
     },
     {
-      label: "Advantage @ own horizon",
+      label: t("compare.advantageOwn"),
       cells: compared.map(({ outcome }) =>
         outcome.result ? formatEURSigned(outcome.result.summary.advantageAtHorizon) : "—",
       ),
     },
     {
-      label: "Break-even (wealth)",
+      label: t("compare.beWealth"),
       cells: compared.map(({ outcome }) =>
         outcome.result?.breakEvens.wealthLiquidation != null
-          ? `year ${outcome.result.breakEvens.wealthLiquidation}`
-          : "beyond",
+          ? t("common.yearN", { n: outcome.result.breakEvens.wealthLiquidation })
+          : t("common.beyond"),
       ),
     },
     {
-      label: "Break-even (costs)",
+      label: t("compare.beCost"),
       cells: compared.map(({ outcome }) =>
         outcome.result?.breakEvens.costLiquidation != null
-          ? `year ${outcome.result.breakEvens.costLiquidation}`
-          : "beyond",
+          ? t("common.yearN", { n: outcome.result.breakEvens.costLiquidation })
+          : t("common.beyond"),
       ),
     },
     {
-      label: "Year-1 cost — buy",
+      label: t("compare.year1Buy"),
       cells: compared.map(({ outcome }) =>
         outcome.result ? formatEUR(outcome.result.summary.yearOneUnrecoverableBuy) : "—",
       ),
@@ -174,15 +176,15 @@ function KpiTable({ compared }: { compared: ComparedScenario[] }) {
   return (
     <Card className="p-4">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold text-ink">Side by side</h2>
-        <LensTag>wealth lens · liquidation</LensTag>
+        <h2 className="text-sm font-semibold text-ink">{t("compare.sideBySide")}</h2>
+        <LensTag>{t("results.compositionLens")}</LensTag>
       </div>
       <div className="mt-3 overflow-x-auto">
         <table className="w-full min-w-[36rem] text-sm">
           <thead>
             <tr className="border-b border-baseline text-left">
               <th className="py-1.5 pr-3 text-[11px] font-medium tracking-wide text-ink-3 uppercase">
-                Metric
+                {t("compare.metric")}
               </th>
               {compared.map(({ scenario, outcome, color }) => (
                 <th key={scenario.id} className="py-1.5 pr-3 font-medium text-ink">
@@ -195,7 +197,7 @@ function KpiTable({ compared }: { compared: ComparedScenario[] }) {
                     {outcome.result ? (
                       <VerdictChip kind={outcome.result.verdict.kind} />
                     ) : (
-                      <span className="text-xs text-critical">invalid</span>
+                      <span className="text-xs text-critical">{t("compare.invalid")}</span>
                     )}
                   </span>
                 </th>
@@ -211,7 +213,7 @@ function KpiTable({ compared }: { compared: ComparedScenario[] }) {
                 <td className="py-1.5 pr-3 text-ink-2">
                   {row.label}
                   {row.highlight ? (
-                    <span className="ml-1 text-[10px] text-ink-3">(differs!)</span>
+                    <span className="ml-1 text-[10px] text-ink-3">{t("compare.differs")}</span>
                   ) : null}
                 </td>
                 {row.cells.map((cell, index) => (
@@ -229,6 +231,7 @@ function KpiTable({ compared }: { compared: ComparedScenario[] }) {
 }
 
 function AdvantageOverlay({ compared }: { compared: ComparedScenario[] }) {
+  const { t } = useLocale();
   const maxHorizon = Math.max(...compared.map(({ outcome }) => outcome.result?.horizonYears ?? 0));
   const rows = Array.from({ length: maxHorizon }, (_, index) => {
     const year = index + 1;
@@ -243,8 +246,8 @@ function AdvantageOverlay({ compared }: { compared: ComparedScenario[] }) {
   return (
     <Card className="p-4">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold text-ink">Advantage of buying, year by year</h2>
-        <LensTag>wealth lens · liquidation</LensTag>
+        <h2 className="text-sm font-semibold text-ink">{t("compare.advantageChart")}</h2>
+        <LensTag>{t("results.compositionLens")}</LensTag>
       </div>
       <div className="mt-2 h-64">
         <ResponsiveContainer width="100%" height="100%">
@@ -272,7 +275,7 @@ function AdvantageOverlay({ compared }: { compared: ComparedScenario[] }) {
                 color: "var(--ds-ink)",
               }}
               formatter={(value) => formatEURSigned(Number(value))}
-              labelFormatter={(year) => `Year ${String(year)}`}
+              labelFormatter={(year) => t("results.tooltip.year", { n: String(year) })}
             />
             <Legend wrapperStyle={{ fontSize: 12, color: "var(--ds-ink-2)" }} />
             <ReferenceLine y={0} stroke="var(--ds-baseline)" />
@@ -294,25 +297,13 @@ function AdvantageOverlay({ compared }: { compared: ComparedScenario[] }) {
   );
 }
 
-const ASSUMPTION_LABELS: Record<keyof EconomicAssumptions, string> = {
-  alternativeReturn: "Alternative return",
-  homeAppreciation: "Home appreciation",
-  rentGrowth: "Rent growth",
-  inflation: "Inflation",
-  capitalGainsTax: "Capital gains tax",
-  maintenanceRate: "Maintenance",
-  recurringTaxRate: "Ownership taxes",
-};
-
 function AssumptionDiff({ compared }: { compared: ComparedScenario[] }) {
+  const { t } = useLocale();
   const keys = Object.keys(defaultAssumptions) as (keyof EconomicAssumptions)[];
   return (
     <Card className="p-4">
-      <h2 className="text-sm font-semibold text-ink">Effective assumptions</h2>
-      <p className="mt-0.5 text-xs text-ink-3">
-        Rows where scenarios disagree are highlighted — differences here can explain the whole
-        verdict gap.
-      </p>
+      <h2 className="text-sm font-semibold text-ink">{t("compare.assumptions")}</h2>
+      <p className="mt-0.5 text-xs text-ink-3">{t("compare.assumptionsHint")}</p>
       <div className="mt-3 overflow-x-auto">
         <table className="w-full min-w-[30rem] text-sm">
           <tbody className="nums">
@@ -327,9 +318,9 @@ function AssumptionDiff({ compared }: { compared: ComparedScenario[] }) {
                   className={`border-b border-hairline last:border-0 ${differs ? "bg-warn/10" : ""}`}
                 >
                   <td className="py-1.5 pr-3 text-ink-2">
-                    {ASSUMPTION_LABELS[key]}
+                    {t(`assumption.${key}`)}
                     {differs ? (
-                      <span className="ml-1 text-[10px] text-ink-3">(differs!)</span>
+                      <span className="ml-1 text-[10px] text-ink-3">{t("compare.differs")}</span>
                     ) : null}
                   </td>
                   {values.map((value, index) => (
@@ -343,10 +334,7 @@ function AssumptionDiff({ compared }: { compared: ComparedScenario[] }) {
           </tbody>
         </table>
       </div>
-      <p className="mt-2 text-[11px] text-ink-3">
-        Verdict colors in the table above: {VERDICT_META.BUY_MORTGAGE.label},{" "}
-        {VERDICT_META.RENT.label}, etc. — the series colors here identify scenarios, not entities.
-      </p>
+      <p className="mt-2 text-[11px] text-ink-3">{t("compare.footnote")}</p>
     </Card>
   );
 }

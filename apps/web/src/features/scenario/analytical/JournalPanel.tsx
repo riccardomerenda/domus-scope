@@ -20,10 +20,12 @@ import {
   saveRevision,
 } from "../../../persistence/journal";
 import { runSimulation, type SimulationOutcome } from "../../../lib/assess";
-import { FACTOR_LABELS, preferenceIndex } from "../../../lib/qualitative";
+import { preferenceIndex } from "../../../lib/qualitative";
 import { diffObjects } from "../../../lib/diff";
 import { formatDate, formatEURSigned, formatNumber } from "../../../lib/format";
+import { useLocale } from "../../../i18n";
 import { Button, Card, LensTag, SelectField, VerdictChip } from "../../../components/ui";
+import { InfoDot } from "../../../components/InfoDot";
 import { TrashIcon } from "../../../components/Icons";
 
 /** Diff values are flattened primitives; objects can't reach here, but be safe. */
@@ -42,11 +44,11 @@ function formatDiffValue(value: unknown): string {
   }
 }
 
-const KIND_META: Record<Exclude<JournalKind, "decision">, { label: string; className: string }> = {
-  note: { label: "Note", className: "border-hairline text-ink-3" },
-  visit: { label: "Visit", className: "border-rent/40 text-rent" },
-  pro: { label: "Pro", className: "border-good/40 text-good" },
-  con: { label: "Con", className: "border-critical/40 text-critical" },
+const KIND_STYLE: Record<Exclude<JournalKind, "decision">, string> = {
+  note: "border-hairline text-ink-3",
+  visit: "border-rent/40 text-rent",
+  pro: "border-good/40 text-good",
+  con: "border-critical/40 text-critical",
 };
 
 export function JournalPanel({
@@ -103,6 +105,7 @@ function QualitativeCard({
   scenario: StoredScenario;
   appConfig: AppConfig;
 }) {
+  const { t } = useLocale();
   const { index, scoredFactors } = preferenceIndex(
     scenario.qualitative,
     appConfig.qualitativeWeights,
@@ -115,17 +118,19 @@ function QualitativeCard({
   return (
     <Card className="p-4">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-ink">Beyond the numbers (BR-015)</h3>
-        <LensTag>never mixed with euros</LensTag>
+        <h3 className="flex items-center gap-1.5 text-sm font-semibold text-ink">
+          {t("journal.qualitative")}
+          <InfoDot topic="qualitative" />
+        </h3>
+        <LensTag>{t("journal.qualitativeLens")}</LensTag>
       </div>
       <p className="mt-0.5 text-xs text-ink-3">
-        For each factor: how much would buying this home improve it for you? 0 = much worse than
-        renting, 5 = neutral, 10 = much better. Weights come from{" "}
+        {t("journal.qualitativeHint")}{" "}
         <Link
           to="/profile"
           className="underline decoration-dotted underline-offset-2 hover:text-ink"
         >
-          your profile
+          {t("journal.qualitativeHintLink")}
         </Link>
         .
       </p>
@@ -133,9 +138,9 @@ function QualitativeCard({
         {QUALITATIVE_FACTORS.map((factor) => (
           <label key={factor} className="block">
             <span className="mb-1 flex items-center justify-between text-xs font-medium text-ink-2">
-              {FACTOR_LABELS[factor]}
+              {t(`factor.${factor}`)}
               <span className="nums text-ink-3">
-                {scenario.qualitative[factor] ?? "—"} · weight{" "}
+                {scenario.qualitative[factor] ?? "—"} · {t("journal.weight")}{" "}
                 {appConfig.qualitativeWeights[factor]}
               </span>
             </span>
@@ -152,14 +157,14 @@ function QualitativeCard({
         ))}
       </div>
       <p className="nums mt-3 border-t border-hairline pt-2 text-sm text-ink-2">
-        Preference index:{" "}
+        {t("journal.preferenceIndex")}{" "}
         {index !== null ? (
           <strong className="text-ink">{formatNumber(index, 0)} / 100</strong>
         ) : (
-          <span className="text-ink-3">score at least one factor</span>
+          <span className="text-ink-3">{t("journal.scoreOne")}</span>
         )}{" "}
         <span className="text-xs text-ink-3">
-          ({scoredFactors.length} factors scored; &gt;50 leans toward buying, non-financially)
+          {t("journal.factorsScored", { count: scoredFactors.length })}
         </span>
       </p>
     </Card>
@@ -175,6 +180,7 @@ function DecisionCard({
   outcome: SimulationOutcome;
   onDecide: (decision: string, reason: string) => void;
 }) {
+  const { t } = useLocale();
   const decision = entries.find((entry) => entry.kind === "decision");
   const [decisionText, setDecisionText] = useState("");
   const [reason, setReason] = useState("");
@@ -182,11 +188,11 @@ function DecisionCard({
   if (decision) {
     return (
       <Card className="border-good/30 p-4">
-        <h3 className="text-sm font-semibold text-ink">Decision recorded</h3>
+        <h3 className="text-sm font-semibold text-ink">{t("journal.decisionRecorded")}</h3>
         <p className="mt-2 text-sm text-ink-2">
-          <strong className="text-ink">{decision.decision}</strong> — decided on{" "}
-          {formatDate(decision.createdAt)}
-          {decision.revisionId ? " (inputs frozen in the history below)" : ""}.
+          <strong className="text-ink">{decision.decision}</strong> —{" "}
+          {t("journal.decidedOn", { date: formatDate(decision.createdAt) })}
+          {decision.revisionId ? t("journal.frozenNote") : ""}.
         </p>
         {decision.text ? (
           <p className="mt-1 text-sm leading-relaxed text-ink-2">“{decision.text}”</p>
@@ -197,12 +203,12 @@ function DecisionCard({
 
   return (
     <Card className="p-4">
-      <h3 className="text-sm font-semibold text-ink">Record the final decision (FR-016)</h3>
+      <h3 className="text-sm font-semibold text-ink">{t("journal.recordTitle")}</h3>
       <p className="mt-0.5 text-xs text-ink-3">
-        Freezes today's inputs so future-you can see exactly what this choice was based on.
+        {t("journal.recordHint")}
         {outcome.result ? (
           <span className="ml-1">
-            Current verdict: <VerdictChip kind={outcome.result.verdict.kind} />
+            {t("journal.currentVerdict")} <VerdictChip kind={outcome.result.verdict.kind} />
           </span>
         ) : null}
       </p>
@@ -210,15 +216,15 @@ function DecisionCard({
         <input
           value={decisionText}
           onChange={(event) => setDecisionText(event.target.value)}
-          placeholder="Decision (e.g. “Buy it”)"
-          aria-label="Decision"
+          placeholder={t("journal.decisionPlaceholder")}
+          aria-label={t("journal.decisionLabel")}
           className="rounded-lg border border-hairline bg-surface px-3 py-2 text-sm text-ink focus-visible:outline-2 focus-visible:outline-rent"
         />
         <input
           value={reason}
           onChange={(event) => setReason(event.target.value)}
-          placeholder="Why? (your future self will thank you)"
-          aria-label="Decision reason"
+          placeholder={t("journal.reasonPlaceholder")}
+          aria-label={t("journal.reasonLabel")}
           className="rounded-lg border border-hairline bg-surface px-3 py-2 text-sm text-ink focus-visible:outline-2 focus-visible:outline-rent"
         />
         <Button
@@ -230,7 +236,7 @@ function DecisionCard({
             setReason("");
           }}
         >
-          Record decision
+          {t("journal.recordButton")}
         </Button>
       </div>
     </Card>
@@ -238,6 +244,7 @@ function DecisionCard({
 }
 
 function EntriesCard({ scenarioId, entries }: { scenarioId: string; entries: JournalEntry[] }) {
+  const { t } = useLocale();
   const [kind, setKind] = useState<Exclude<JournalKind, "decision">>("note");
   const [text, setText] = useState("");
   const visible = entries.filter((entry) => entry.kind !== "decision");
@@ -250,35 +257,33 @@ function EntriesCard({ scenarioId, entries }: { scenarioId: string; entries: Jou
 
   return (
     <Card className="p-4">
-      <h3 className="text-sm font-semibold text-ink">Journal</h3>
-      <p className="mt-0.5 text-xs text-ink-3">
-        Notes, visits, pros and cons — the qualitative memory of this evaluation.
-      </p>
+      <h3 className="text-sm font-semibold text-ink">{t("journal.title")}</h3>
+      <p className="mt-0.5 text-xs text-ink-3">{t("journal.hint")}</p>
       <div className="mt-3 flex gap-2">
         <div className="w-28 shrink-0">
           <SelectField
-            label="Type"
+            label={t("journal.type")}
             value={kind}
             onChange={(event) => setKind(event.target.value as Exclude<JournalKind, "decision">)}
           >
-            <option value="note">Note</option>
-            <option value="visit">Visit</option>
-            <option value="pro">Pro</option>
-            <option value="con">Con</option>
+            <option value="note">{t("journal.kind.note")}</option>
+            <option value="visit">{t("journal.kind.visit")}</option>
+            <option value="pro">{t("journal.kind.pro")}</option>
+            <option value="con">{t("journal.kind.con")}</option>
           </SelectField>
         </div>
         <label className="block flex-1">
-          <span className="mb-1 block text-xs font-medium text-ink-2">Entry</span>
+          <span className="mb-1 block text-xs font-medium text-ink-2">{t("journal.entry")}</span>
           <div className="flex gap-2">
             <input
               value={text}
               onChange={(event) => setText(event.target.value)}
               onKeyDown={(event) => (event.key === "Enter" ? add() : undefined)}
-              placeholder="e.g. “North-facing living room, felt dark at 3pm”"
+              placeholder={t("journal.entryPlaceholder")}
               className="w-full rounded-lg border border-hairline bg-surface px-3 py-2 text-sm text-ink focus-visible:outline-2 focus-visible:outline-rent"
             />
             <Button variant="primary" onClick={add} disabled={text.trim() === ""}>
-              Add
+              {t("common.add")}
             </Button>
           </div>
         </label>
@@ -286,30 +291,27 @@ function EntriesCard({ scenarioId, entries }: { scenarioId: string; entries: Jou
 
       {visible.length > 0 ? (
         <ul className="mt-4 space-y-2">
-          {visible.map((entry) => {
-            const meta = KIND_META[entry.kind as Exclude<JournalKind, "decision">];
-            return (
-              <li key={entry.id} className="flex items-start gap-2 text-sm">
-                <span
-                  className={`mt-0.5 shrink-0 rounded-full border px-1.5 py-0.5 text-[10px] font-medium ${meta.className}`}
-                >
-                  {meta.label}
-                </span>
-                <span className="min-w-0 flex-1 text-ink-2">{entry.text}</span>
-                <span className="nums shrink-0 text-[11px] text-ink-3">
-                  {formatDate(entry.createdAt)}
-                </span>
-                <Button
-                  variant="danger"
-                  className="-my-1 px-1.5"
-                  aria-label="Delete entry"
-                  onClick={() => void deleteJournalEntry(entry.id)}
-                >
-                  <TrashIcon width={13} height={13} />
-                </Button>
-              </li>
-            );
-          })}
+          {visible.map((entry) => (
+            <li key={entry.id} className="flex items-start gap-2 text-sm">
+              <span
+                className={`mt-0.5 shrink-0 rounded-full border px-1.5 py-0.5 text-[10px] font-medium ${KIND_STYLE[entry.kind as Exclude<JournalKind, "decision">]}`}
+              >
+                {t(`journal.kind.${entry.kind as Exclude<JournalKind, "decision">}`)}
+              </span>
+              <span className="min-w-0 flex-1 text-ink-2">{entry.text}</span>
+              <span className="nums shrink-0 text-[11px] text-ink-3">
+                {formatDate(entry.createdAt)}
+              </span>
+              <Button
+                variant="danger"
+                className="-my-1 px-1.5"
+                aria-label={t("journal.deleteEntry")}
+                onClick={() => void deleteJournalEntry(entry.id)}
+              >
+                <TrashIcon width={13} height={13} />
+              </Button>
+            </li>
+          ))}
         </ul>
       ) : null}
     </Card>
@@ -327,19 +329,20 @@ function HistoryCard({
   appConfig: AppConfig;
   onSave: (label: string) => void;
 }) {
+  const { t } = useLocale();
   const [label, setLabel] = useState("");
   const [diffId, setDiffId] = useState<string | null>(null);
 
   return (
     <Card className="p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-ink">History (FR-020)</h3>
+        <h3 className="text-sm font-semibold text-ink">{t("journal.history")}</h3>
         <div className="flex items-center gap-2">
           <input
             value={label}
             onChange={(event) => setLabel(event.target.value)}
-            placeholder="Snapshot label…"
-            aria-label="Snapshot label"
+            placeholder={t("journal.snapshotPlaceholder")}
+            aria-label={t("journal.snapshotAria")}
             className="w-44 rounded-lg border border-hairline bg-surface px-3 py-1.5 text-sm text-ink focus-visible:outline-2 focus-visible:outline-rent"
           />
           <Button
@@ -348,17 +351,14 @@ function HistoryCard({
               setLabel("");
             }}
           >
-            Save snapshot
+            {t("journal.saveSnapshot")}
           </Button>
         </div>
       </div>
-      <p className="mt-0.5 text-xs text-ink-3">
-        Snapshots freeze inputs; results are always recomputed, so “compare to now” explains exactly
-        why a verdict changed (NFR-007).
-      </p>
+      <p className="mt-0.5 text-xs text-ink-3">{t("journal.historyHint")}</p>
 
       {revisions.length === 0 ? (
-        <p className="mt-3 text-sm text-ink-3">No snapshots yet.</p>
+        <p className="mt-3 text-sm text-ink-3">{t("journal.noSnapshots")}</p>
       ) : (
         <ul className="mt-3 space-y-2">
           {revisions.map((revision) => (
@@ -390,6 +390,7 @@ function RevisionRow({
   showDiff: boolean;
   onToggleDiff: () => void;
 }) {
+  const { t } = useLocale();
   const outcome = useMemo(
     () =>
       revision.analytical
@@ -420,18 +421,18 @@ function RevisionRow({
             </span>
           </>
         ) : (
-          <span className="text-xs text-ink-3">quick-mode snapshot</span>
+          <span className="text-xs text-ink-3">{t("journal.quickSnapshot")}</span>
         )}
         <span className="ml-auto flex items-center gap-1">
           {revision.analytical ? (
             <Button className="px-2 py-1 text-xs" onClick={onToggleDiff}>
-              {showDiff ? "Hide diff" : "Compare to now"}
+              {showDiff ? t("journal.hideDiff") : t("journal.compareToNow")}
             </Button>
           ) : null}
           <Button
             variant="danger"
             className="px-1.5"
-            aria-label={`Delete snapshot ${revision.label}`}
+            aria-label={t("journal.deleteSnapshot", { label: revision.label })}
             onClick={() => void deleteRevision(revision.id)}
           >
             <TrashIcon width={13} height={13} />
@@ -440,14 +441,14 @@ function RevisionRow({
       </div>
       {showDiff ? (
         changes.length === 0 ? (
-          <p className="mt-2 text-xs text-ink-3">No input differences vs the current state.</p>
+          <p className="mt-2 text-xs text-ink-3">{t("journal.noDiff")}</p>
         ) : (
           <table className="nums mt-2 w-full text-xs">
             <thead>
               <tr className="border-b border-hairline text-left text-[10px] tracking-wide text-ink-3 uppercase">
-                <th className="py-1 pr-2 font-medium">Input</th>
-                <th className="py-1 pr-2 font-medium">Then</th>
-                <th className="py-1 font-medium">Now</th>
+                <th className="py-1 pr-2 font-medium">{t("journal.diffInput")}</th>
+                <th className="py-1 pr-2 font-medium">{t("journal.diffThen")}</th>
+                <th className="py-1 font-medium">{t("journal.diffNow")}</th>
               </tr>
             </thead>
             <tbody>

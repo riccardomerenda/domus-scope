@@ -19,7 +19,16 @@ import {
   type VerdictKind,
 } from "@domus-scope/engine";
 import { formatEUR, formatEURSigned, formatPercent } from "../../../lib/format";
-import { Card, FragilityBadge, LensTag, VerdictChip, VERDICT_META } from "../../../components/ui";
+import { isMessageKey, useLocale, type LocaleContextValue } from "../../../i18n";
+import { Card, FragilityBadge, LensTag, VerdictChip } from "../../../components/ui";
+
+function perturbationLabel(
+  t: LocaleContextValue["t"],
+  entry: SensitivityResult["entries"][number],
+): string {
+  const key = `perturbation.${entry.id.split(":")[0] ?? ""}`;
+  return isMessageKey(key) ? t(key) : entry.label;
+}
 
 export function SensitivityPanel({
   sensitivity,
@@ -30,6 +39,7 @@ export function SensitivityPanel({
   input: ScenarioInput;
   config: EngineConfig;
 }) {
+  const { t } = useLocale();
   const flipping = sensitivity.entries.filter((entry) => entry.flipsVerdict);
 
   return (
@@ -39,40 +49,39 @@ export function SensitivityPanel({
         <div className="flex flex-wrap items-center gap-3">
           <FragilityBadge rating={sensitivity.fragility.rating} />
           <span className="text-sm text-ink-2">
-            {sensitivity.fragility.flipped} of {sensitivity.fragility.total} perturbations flip the
-            verdict ({formatPercent(sensitivity.fragility.index, 0)}).
+            {t("sensitivity.flipSummary", {
+              flipped: sensitivity.fragility.flipped,
+              total: sensitivity.fragility.total,
+              pct: formatPercent(sensitivity.fragility.index, 0),
+            })}
           </span>
-          <LensTag>wealth lens · configured basis</LensTag>
+          <LensTag>{t("sensitivity.lens")}</LensTag>
         </div>
         {flipping.length > 0 ? (
           <div className="mt-3 flex flex-wrap items-center gap-1.5">
-            <span className="text-xs text-ink-3">Flips the verdict:</span>
+            <span className="text-xs text-ink-3">{t("sensitivity.flipsLabel")}</span>
             {flipping.map((entry) => (
               <span
                 key={entry.id}
                 className="rounded-full border border-critical/40 px-2 py-0.5 text-xs text-critical"
               >
-                {entry.label} {entry.deltaLabel} → {VERDICT_META[entry.verdictKind].label}
+                {perturbationLabel(t, entry)} {entry.deltaLabel} →{" "}
+                {t(`verdict.${entry.verdictKind}`)}
               </span>
             ))}
           </div>
         ) : (
-          <p className="mt-2 text-xs text-ink-3">
-            No single perturbation changes the conclusion — a robust result under this plan.
-          </p>
+          <p className="mt-2 text-xs text-ink-3">{t("sensitivity.robust")}</p>
         )}
       </Card>
 
       {/* Tornado */}
       <Card className="p-4">
         <div className="flex items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold text-ink">What moves the result</h3>
-          <LensTag>Δ advantage at horizon</LensTag>
+          <h3 className="text-sm font-semibold text-ink">{t("sensitivity.tornado")}</h3>
+          <LensTag>{t("sensitivity.tornadoLens")}</LensTag>
         </div>
-        <p className="mt-0.5 text-xs text-ink-3">
-          Each assumption perturbed one at a time; bars show how much the buy-vs-rent advantage
-          moves. Entries that flip the verdict are outlined.
-        </p>
+        <p className="mt-0.5 text-xs text-ink-3">{t("sensitivity.tornadoHint")}</p>
         <div className="mt-2" style={{ height: Math.max(sensitivity.entries.length * 30, 160) }}>
           <Tornado entries={sensitivity.entries} />
         </div>
@@ -88,8 +97,9 @@ export function SensitivityPanel({
 }
 
 function Tornado({ entries }: { entries: SensitivityResult["entries"] }) {
+  const { t } = useLocale();
   const rows = entries.map((entry) => ({
-    name: `${entry.label} ${entry.deltaLabel}`,
+    name: `${perturbationLabel(t, entry)} ${entry.deltaLabel}`,
     delta: entry.advantageDelta,
     flips: entry.flipsVerdict,
   }));
@@ -122,7 +132,7 @@ function Tornado({ entries }: { entries: SensitivityResult["entries"] }) {
             fontSize: 12,
             color: "var(--ds-ink)",
           }}
-          formatter={(value) => [formatEURSigned(Number(value)), "Δ advantage"]}
+          formatter={(value) => [formatEURSigned(Number(value)), t("sensitivity.deltaAdvantage")]}
         />
         <ReferenceLine x={0} stroke="var(--ds-baseline)" />
         <Bar dataKey="delta" radius={[0, 3, 3, 0]}>
@@ -141,6 +151,7 @@ function Tornado({ entries }: { entries: SensitivityResult["entries"] }) {
 }
 
 function PresetTriple({ input, config }: { input: ScenarioInput; config: EngineConfig }) {
+  const { t } = useLocale();
   const runs = useMemo(
     () =>
       Object.values(assumptionPresets).map((preset) => {
@@ -153,19 +164,21 @@ function PresetTriple({ input, config }: { input: ScenarioInput; config: EngineC
   return (
     <Card className="p-4">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-ink">Conservative / base / optimistic</h3>
-        <LensTag>presets replace scenario overrides</LensTag>
+        <h3 className="text-sm font-semibold text-ink">{t("sensitivity.presets")}</h3>
+        <LensTag>{t("sensitivity.presetsLens")}</LensTag>
       </div>
       <div className="mt-3 grid gap-3 sm:grid-cols-3">
         {runs.map(({ preset, result }) => (
           <div key={preset.id} className="rounded-xl border border-hairline p-3">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-sm font-medium text-ink">{preset.label}</span>
+              <span className="text-sm font-medium text-ink">{t(`preset.${preset.id}`)}</span>
               <VerdictChip kind={result.verdict.kind} />
             </div>
             <dl className="nums mt-2 space-y-1 text-sm">
               <div className="flex justify-between">
-                <dt className="text-ink-3">Advantage @ {result.horizonYears}y</dt>
+                <dt className="text-ink-3">
+                  {t("sensitivity.presetAdvantage", { years: result.horizonYears })}
+                </dt>
                 <dd
                   className={result.summary.advantageAtHorizon >= 0 ? "text-good" : "text-critical"}
                 >
@@ -173,15 +186,15 @@ function PresetTriple({ input, config }: { input: ScenarioInput; config: EngineC
                 </dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-ink-3">BE wealth</dt>
+                <dt className="text-ink-3">{t("sensitivity.presetBe")}</dt>
                 <dd className="text-ink-2">
                   {result.breakEvens.wealthLiquidation !== null
-                    ? `year ${result.breakEvens.wealthLiquidation}`
-                    : "beyond"}
+                    ? t("common.yearN", { n: result.breakEvens.wealthLiquidation })
+                    : t("common.beyond")}
                 </dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-ink-3">Year-1 buy cost</dt>
+                <dt className="text-ink-3">{t("sensitivity.presetYear1")}</dt>
                 <dd className="text-ink-2">{formatEUR(result.summary.yearOneUnrecoverableBuy)}</dd>
               </div>
             </dl>
@@ -200,17 +213,16 @@ const HEATMAP_FILL: Record<VerdictKind, string> = {
 };
 
 function Heatmap({ heatmap }: { heatmap: NonNullable<SensitivityResult["heatmap"]> }) {
+  const { t } = useLocale();
   // Render rows top-down with the highest appreciation first.
   const rows = [...heatmap.cells].reverse();
   return (
     <Card className="p-4">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-ink">Where the decision flips</h3>
-        <LensTag>verdict by market assumptions</LensTag>
+        <h3 className="text-sm font-semibold text-ink">{t("sensitivity.heatmap")}</h3>
+        <LensTag>{t("sensitivity.heatmapLens")}</LensTag>
       </div>
-      <p className="mt-0.5 text-xs text-ink-3">
-        Verdict across rent growth (→) and home appreciation (↑); every other input unchanged.
-      </p>
+      <p className="mt-0.5 text-xs text-ink-3">{t("sensitivity.heatmapHint")}</p>
 
       <div className="mt-3 overflow-x-auto">
         <div className="inline-block">
@@ -222,7 +234,12 @@ function Heatmap({ heatmap }: { heatmap: NonNullable<SensitivityResult["heatmap"
               {row.map((cell) => (
                 <div
                   key={`${cell.rentGrowth}:${cell.homeAppreciation}`}
-                  title={`rent growth ${formatPercent(cell.rentGrowth, 0)}, appreciation ${formatPercent(cell.homeAppreciation, 0)} → ${VERDICT_META[cell.verdictKind].label} (${formatEURSigned(cell.advantage)})`}
+                  title={t("sensitivity.heatmapCell", {
+                    rent: formatPercent(cell.rentGrowth, 0),
+                    appreciation: formatPercent(cell.homeAppreciation, 0),
+                    verdict: t(`verdict.${cell.verdictKind}`),
+                    advantage: formatEURSigned(cell.advantage),
+                  })}
                   className="m-[1px] h-7 w-9 rounded-[3px]"
                   style={{
                     backgroundColor: HEATMAP_FILL[cell.verdictKind],
@@ -244,7 +261,7 @@ function Heatmap({ heatmap }: { heatmap: NonNullable<SensitivityResult["heatmap"
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-ink-2">
-        <span className="text-ink-3">Legend:</span>
+        <span className="text-ink-3">{t("sensitivity.legend")}</span>
         {(Object.keys(HEATMAP_FILL) as VerdictKind[]).map((kind) => (
           <span key={kind} className="inline-flex items-center gap-1.5">
             <span
@@ -254,7 +271,7 @@ function Heatmap({ heatmap }: { heatmap: NonNullable<SensitivityResult["heatmap"
                 opacity: kind === "GREY_ZONE" ? 0.35 : 0.85,
               }}
             />
-            {VERDICT_META[kind].label}
+            {t(`verdict.${kind}`)}
           </span>
         ))}
       </div>

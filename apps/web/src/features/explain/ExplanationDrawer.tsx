@@ -1,6 +1,8 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { formulaRegistry } from "@domus-scope/engine";
 import { formatEUR, formatPercent, formatTraceValue } from "../../lib/format";
+import { useLocale } from "../../i18n";
+import { formulaDescriptionsIt } from "../../i18n/formula-it";
 import { Button, LensTag } from "../../components/ui";
 import { CloseIcon } from "../../components/Icons";
 import { type ExplainPayload } from "./ExplainContext";
@@ -12,6 +14,7 @@ export function ExplanationDrawer({
   payload: ExplainPayload | null;
   onClose: () => void;
 }) {
+  const { t } = useLocale();
   return (
     <Dialog.Root open={payload !== null} onOpenChange={(open) => (open ? undefined : onClose())}>
       <Dialog.Portal>
@@ -21,9 +24,11 @@ export function ExplanationDrawer({
           className="fixed top-0 right-0 z-50 h-full w-[min(24rem,92vw)] overflow-y-auto border-l border-edge bg-surface p-5 shadow-2xl"
         >
           <div className="flex items-start justify-between gap-3">
-            <Dialog.Title className="text-sm font-semibold text-ink">Why this number?</Dialog.Title>
+            <Dialog.Title className="text-sm font-semibold text-ink">
+              {t("drawer.title")}
+            </Dialog.Title>
             <Dialog.Close asChild>
-              <Button aria-label="Close explanation" className="-mt-1 -mr-2 px-2">
+              <Button aria-label={t("drawer.closeAria")} className="-mt-1 -mr-2 px-2">
                 <CloseIcon />
               </Button>
             </Dialog.Close>
@@ -35,12 +40,20 @@ export function ExplanationDrawer({
   );
 }
 
+function useFormulaDescription(): (formulaId: string, fallback: string) => string {
+  const { locale } = useLocale();
+  return (formulaId, fallback) =>
+    locale === "it" ? (formulaDescriptionsIt[formulaId] ?? fallback) : fallback;
+}
+
 function DrawerBody({ payload }: { payload: ExplainPayload }) {
   if (payload.kind === "threshold") return <ThresholdBody rule={payload.rule} />;
   return <LineItemBody payload={payload} />;
 }
 
 function LineItemBody({ payload }: { payload: Extract<ExplainPayload, { kind: "lineItem" }> }) {
+  const { t } = useLocale();
+  const describe = useFormulaDescription();
   const { item } = payload;
   const formula = formulaRegistry[item.formulaId];
   return (
@@ -48,17 +61,18 @@ function LineItemBody({ payload }: { payload: Extract<ExplainPayload, { kind: "l
       <div>
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-ink">{item.label}</span>
-          <LensTag>{item.lens} lens</LensTag>
+          <LensTag>{t("drawer.lensTag", { lens: item.lens })}</LensTag>
         </div>
         <div className="nums mt-1 text-2xl font-semibold text-ink">{formatEUR(item.amount)}</div>
         {item.sign === "credit" ? (
-          <p className="mt-1 text-xs text-ink-3">
-            A credit: it reduces the unrecoverable costs of this scenario.
-          </p>
+          <p className="mt-1 text-xs text-ink-3">{t("drawer.creditNote")}</p>
         ) : null}
       </div>
       {formula ? (
-        <FormulaBlock expression={formula.expression} description={formula.description} />
+        <FormulaBlock
+          expression={formula.expression}
+          description={describe(formula.id, formula.description)}
+        />
       ) : null}
       <InputsTable inputs={item.inputs} />
     </div>
@@ -66,26 +80,31 @@ function LineItemBody({ payload }: { payload: Extract<ExplainPayload, { kind: "l
 }
 
 function ThresholdBody({ rule }: { rule: Extract<ExplainPayload, { kind: "threshold" }>["rule"] }) {
+  const { t } = useLocale();
+  const describe = useFormulaDescription();
   const formula = formulaRegistry[rule.derivation.formulaId];
   return (
     <div className="mt-4 space-y-4">
       <div>
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-ink">Derived threshold R*</span>
-          <LensTag>quick rule</LensTag>
+          <span className="text-sm font-medium text-ink">{t("drawer.threshold")}</span>
+          <LensTag>{t("drawer.quickRule")}</LensTag>
         </div>
         <div className="nums mt-1 text-2xl font-semibold text-ink">
           {formatPercent(rule.threshold, 2)}
         </div>
-        <p className="mt-1 text-xs text-ink-3">
-          Derived from your assumptions (BR-018) — not a hardcoded “5% rule”.
-        </p>
+        <p className="mt-1 text-xs text-ink-3">{t("drawer.thresholdNote")}</p>
       </div>
       {formula ? (
-        <FormulaBlock expression={formula.expression} description={formula.description} />
+        <FormulaBlock
+          expression={formula.expression}
+          description={describe(formula.id, formula.description)}
+        />
       ) : null}
       <div>
-        <h3 className="mb-1 text-xs font-semibold tracking-wide text-ink-3 uppercase">Terms</h3>
+        <h3 className="mb-1 text-xs font-semibold tracking-wide text-ink-3 uppercase">
+          {t("drawer.terms")}
+        </h3>
         <table className="w-full text-sm">
           <tbody>
             {rule.derivation.terms.map((term) => (
@@ -111,9 +130,12 @@ function ThresholdBody({ rule }: { rule: Extract<ExplainPayload, { kind: "thresh
 }
 
 function FormulaBlock({ expression, description }: { expression: string; description: string }) {
+  const { t } = useLocale();
   return (
     <div>
-      <h3 className="mb-1 text-xs font-semibold tracking-wide text-ink-3 uppercase">Formula</h3>
+      <h3 className="mb-1 text-xs font-semibold tracking-wide text-ink-3 uppercase">
+        {t("drawer.formula")}
+      </h3>
       <code className="block rounded-lg border border-hairline bg-page px-3 py-2 text-xs text-ink">
         {expression}
       </code>
@@ -123,11 +145,14 @@ function FormulaBlock({ expression, description }: { expression: string; descrip
 }
 
 function InputsTable({ inputs }: { inputs: Record<string, number | string> }) {
+  const { t } = useLocale();
   const entries = Object.entries(inputs);
   if (entries.length === 0) return null;
   return (
     <div>
-      <h3 className="mb-1 text-xs font-semibold tracking-wide text-ink-3 uppercase">Values used</h3>
+      <h3 className="mb-1 text-xs font-semibold tracking-wide text-ink-3 uppercase">
+        {t("drawer.values")}
+      </h3>
       <table className="w-full text-sm">
         <tbody>
           {entries.map(([key, value]) => (

@@ -11,6 +11,7 @@ import {
 } from "../../persistence/scenarios";
 import { assessQuickData, engineConfigFor, runSimulation } from "../../lib/assess";
 import { formatDate, formatEUR, formatEURSigned, formatPercent } from "../../lib/format";
+import { useLocale, type LocaleContextValue } from "../../i18n";
 import {
   Button,
   Card,
@@ -24,6 +25,7 @@ import { ArchiveIcon, CopyIcon, PlusIcon, RestoreIcon, TrashIcon } from "../../c
 
 export function DashboardPage() {
   const navigate = useNavigate();
+  const { t } = useLocale();
   const [showArchived, setShowArchived] = useState(false);
   const scenarios = useLiveQuery(() => db.scenarios.orderBy("updatedAt").reverse().toArray(), []);
   const appConfig =
@@ -35,7 +37,7 @@ export function DashboardPage() {
   const archivedCount = scenarios.filter((scenario) => scenario.archived).length;
 
   async function onNewScenario() {
-    const scenario = await createScenario();
+    const scenario = await createScenario(t("dashboard.new"));
     void navigate(`/scenario/${scenario.id}`);
   }
 
@@ -43,21 +45,19 @@ export function DashboardPage() {
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight text-ink">Scenarios</h1>
-          <p className="mt-0.5 text-sm text-ink-2">
-            Each scenario compares renting, buying with a mortgage, and buying cash.
-          </p>
+          <h1 className="text-xl font-semibold tracking-tight text-ink">{t("dashboard.title")}</h1>
+          <p className="mt-0.5 text-sm text-ink-2">{t("dashboard.subtitle")}</p>
         </div>
         <div className="flex items-center gap-4">
           {archivedCount > 0 || showArchived ? (
             <ToggleField
-              label={`Archived (${archivedCount})`}
+              label={t("dashboard.archivedToggle", { count: archivedCount })}
               checked={showArchived}
               onChange={setShowArchived}
             />
           ) : null}
           <Button variant="primary" onClick={() => void onNewScenario()}>
-            <PlusIcon /> New scenario
+            <PlusIcon /> {t("dashboard.new")}
           </Button>
         </div>
       </div>
@@ -76,20 +76,16 @@ export function DashboardPage() {
 }
 
 function EmptyState({ archivedView, onCreate }: { archivedView: boolean; onCreate: () => void }) {
+  const { t } = useLocale();
   if (archivedView) {
-    return <p className="mt-10 text-center text-sm text-ink-3">No archived scenarios.</p>;
+    return <p className="mt-10 text-center text-sm text-ink-3">{t("dashboard.noArchived")}</p>;
   }
   return (
-    <Card className="mt-10 mx-auto max-w-xl p-8 text-center">
-      <h2 className="text-lg font-semibold text-ink">Don't compare rent to a mortgage payment</h2>
-      <p className="mt-3 text-sm leading-relaxed text-ink-2">
-        A mortgage payment hides wealth inside it: the principal portion becomes yours, only the
-        interest is a cost. DomusScope compares what each choice really burns —{" "}
-        <strong>unrecoverable costs</strong> — and what each builds. Every number can be opened to
-        see its formula and assumptions.
-      </p>
+    <Card className="mx-auto mt-10 max-w-xl p-8 text-center">
+      <h2 className="text-lg font-semibold text-ink">{t("dashboard.empty.title")}</h2>
+      <p className="mt-3 text-sm leading-relaxed text-ink-2">{t("dashboard.empty.body")}</p>
       <Button variant="primary" className="mt-5" onClick={onCreate}>
-        <PlusIcon /> Create your first scenario
+        <PlusIcon /> {t("dashboard.empty.cta")}
       </Button>
     </Card>
   );
@@ -107,7 +103,11 @@ interface CardSummary {
 
 type VerdictKindOf = Parameters<typeof VerdictChip>[0]["kind"];
 
-function summarize(scenario: StoredScenario, appConfig: AppConfig): CardSummary {
+function summarize(
+  scenario: StoredScenario,
+  appConfig: AppConfig,
+  t: LocaleContextValue["t"],
+): CardSummary {
   if (scenario.mode === "analytical" && scenario.analytical) {
     const data = scenario.analytical;
     const outcome = runSimulation({ id: scenario.id, title: scenario.title }, data, appConfig);
@@ -126,15 +126,15 @@ function summarize(scenario: StoredScenario, appConfig: AppConfig): CardSummary 
       rows: outcome.result
         ? [
             {
-              label: `Δ @ ${data.horizonYears}y`,
+              label: t("dashboard.card.advantage", { years: data.horizonYears }),
               value: formatEURSigned(last?.advantageLiquidation ?? 0),
             },
             {
-              label: "BE wealth",
+              label: t("dashboard.card.beWealth"),
               value:
                 outcome.result.breakEvens.wealthLiquidation !== null
-                  ? `year ${outcome.result.breakEvens.wealthLiquidation}`
-                  : "beyond",
+                  ? t("common.yearN", { n: outcome.result.breakEvens.wealthLiquidation })
+                  : t("common.beyond"),
             },
           ]
         : [],
@@ -160,8 +160,9 @@ function summarize(scenario: StoredScenario, appConfig: AppConfig): CardSummary 
 
 function ScenarioCard({ scenario, appConfig }: { scenario: StoredScenario; appConfig: AppConfig }) {
   const navigate = useNavigate();
+  const { t } = useLocale();
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const summary = summarize(scenario, appConfig);
+  const summary = summarize(scenario, appConfig, t);
 
   return (
     <Card className="group relative p-4 transition-shadow hover:shadow-md">
@@ -173,7 +174,7 @@ function ScenarioCard({ scenario, appConfig }: { scenario: StoredScenario; appCo
         <div className="flex items-start justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2">
             <h3 className="truncate font-medium text-ink">{scenario.title}</h3>
-            {scenario.mode === "analytical" ? <LensTag>full</LensTag> : null}
+            {scenario.mode === "analytical" ? <LensTag>{t("dashboard.card.full")}</LensTag> : null}
           </div>
           {summary.verdictKind && !summary.invalid ? (
             <span className="flex shrink-0 items-center gap-1.5">
@@ -181,17 +182,19 @@ function ScenarioCard({ scenario, appConfig }: { scenario: StoredScenario; appCo
               <VerdictChip kind={summary.verdictKind} indicative={summary.indicative} />
             </span>
           ) : (
-            <span className="text-xs text-critical">invalid inputs</span>
+            <span className="text-xs text-critical">{t("common.invalidInputs")}</span>
           )}
         </div>
         <dl className="nums mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
           <div className="flex justify-between">
-            <dt className="text-ink-3">Price</dt>
+            <dt className="text-ink-3">{t("dashboard.card.price")}</dt>
             <dd className="text-ink-2">{formatEUR(summary.price)}</dd>
           </div>
           <div className="flex justify-between">
-            <dt className="text-ink-3">Rent</dt>
-            <dd className="text-ink-2">{formatEUR(summary.rent)}/mo</dd>
+            <dt className="text-ink-3">{t("dashboard.card.rent")}</dt>
+            <dd className="text-ink-2">
+              {t("common.perMonth", { amount: formatEUR(summary.rent) })}
+            </dd>
           </div>
           {summary.rows.map((row) => (
             <div key={row.label} className="flex justify-between">
@@ -200,29 +203,31 @@ function ScenarioCard({ scenario, appConfig }: { scenario: StoredScenario; appCo
             </div>
           ))}
         </dl>
-        <p className="mt-3 text-[11px] text-ink-3">Updated {formatDate(scenario.updatedAt)}</p>
+        <p className="mt-3 text-[11px] text-ink-3">
+          {t("dashboard.card.updated", { date: formatDate(scenario.updatedAt) })}
+        </p>
       </button>
 
       <div className="mt-3 flex items-center gap-1 border-t border-hairline pt-2">
         <Button
           className="px-2 py-1 text-xs"
           onClick={() => void duplicateScenario(scenario.id)}
-          title="Duplicate"
+          title={t("common.duplicate")}
         >
-          <CopyIcon width={14} height={14} /> Duplicate
+          <CopyIcon width={14} height={14} /> {t("common.duplicate")}
         </Button>
         <Button
           className="px-2 py-1 text-xs"
           onClick={() => void setArchived(scenario.id, !scenario.archived)}
-          title={scenario.archived ? "Restore" : "Archive"}
+          title={scenario.archived ? t("common.restore") : t("common.archive")}
         >
           {scenario.archived ? (
             <>
-              <RestoreIcon width={14} height={14} /> Restore
+              <RestoreIcon width={14} height={14} /> {t("common.restore")}
             </>
           ) : (
             <>
-              <ArchiveIcon width={14} height={14} /> Archive
+              <ArchiveIcon width={14} height={14} /> {t("common.archive")}
             </>
           )}
         </Button>
@@ -230,18 +235,18 @@ function ScenarioCard({ scenario, appConfig }: { scenario: StoredScenario; appCo
           variant="danger"
           className="ml-auto px-2 py-1 text-xs"
           onClick={() => setConfirmDelete(true)}
-          title="Delete"
+          title={t("common.delete")}
         >
-          <TrashIcon width={14} height={14} /> Delete
+          <TrashIcon width={14} height={14} /> {t("common.delete")}
         </Button>
       </div>
 
       <ConfirmDialog
         open={confirmDelete}
         onOpenChange={setConfirmDelete}
-        title={`Delete “${scenario.title}”?`}
-        description="This permanently removes the scenario from this device. There is no undo."
-        confirmLabel="Delete scenario"
+        title={t("dashboard.delete.title", { title: scenario.title })}
+        description={t("dashboard.delete.body")}
+        confirmLabel={t("dashboard.delete.confirm")}
         onConfirm={() => void deleteScenario(scenario.id)}
       />
     </Card>

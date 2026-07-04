@@ -14,6 +14,7 @@ import {
   YAxis,
 } from "recharts";
 import { formatEUR } from "../../../lib/format";
+import { useLocale } from "../../../i18n";
 import { Card, LensTag } from "../../../components/ui";
 
 /**
@@ -75,6 +76,7 @@ export interface TwoSeriesRow {
 }
 
 export function RentVsBuyLines({ rows }: { rows: TwoSeriesRow[] }) {
+  const { t } = useLocale();
   return (
     <ResponsiveContainer width="100%" height="100%">
       <LineChart data={rows} margin={{ top: 8, right: 12, bottom: 0, left: 4 }}>
@@ -95,17 +97,30 @@ export function RentVsBuyLines({ rows }: { rows: TwoSeriesRow[] }) {
         <Tooltip
           contentStyle={TOOLTIP_STYLE}
           formatter={(value) => tooltipEUR(value)}
-          labelFormatter={(year) => `Year ${String(year)}`}
+          labelFormatter={(year) => t("results.tooltip.year", { n: String(year) })}
         />
         <Legend wrapperStyle={LEGEND_STYLE} />
-        <Line name="Rent" dataKey="rent" stroke="var(--ds-rent)" strokeWidth={2} dot={false} />
-        <Line name="Buy" dataKey="buy" stroke="var(--ds-buy)" strokeWidth={2} dot={false} />
+        <Line
+          name={t("results.series.rent")}
+          dataKey="rent"
+          stroke="var(--ds-rent)"
+          strokeWidth={2}
+          dot={false}
+        />
+        <Line
+          name={t("results.series.buy")}
+          dataKey="buy"
+          stroke="var(--ds-buy)"
+          strokeWidth={2}
+          dot={false}
+        />
       </LineChart>
     </ResponsiveContainer>
   );
 }
 
 export function AdvantageBars({ rows }: { rows: { year: number; advantage: number }[] }) {
+  const { t } = useLocale();
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={rows} margin={{ top: 8, right: 12, bottom: 0, left: 4 }}>
@@ -125,11 +140,11 @@ export function AdvantageBars({ rows }: { rows: { year: number; advantage: numbe
         />
         <Tooltip
           contentStyle={TOOLTIP_STYLE}
-          formatter={(value) => [tooltipEUR(value), "Buy − rent"]}
-          labelFormatter={(year) => `Sell at year ${String(year)}`}
+          formatter={(value) => [tooltipEUR(value), t("results.tooltip.buyMinusRent")]}
+          labelFormatter={(year) => t("results.tooltip.sellAt", { n: String(year) })}
         />
         <ReferenceLine y={0} stroke="var(--ds-baseline)" />
-        <Bar name="Advantage of buying" dataKey="advantage" radius={[3, 3, 0, 0]}>
+        <Bar name={t("results.series.advantage")} dataKey="advantage" radius={[3, 3, 0, 0]}>
           {rows.map((row) => (
             <Cell key={row.year} fill={row.advantage >= 0 ? "var(--ds-buy)" : "var(--ds-rent)"} />
           ))}
@@ -144,6 +159,7 @@ export function MortgageAnatomyBars({
 }: {
   rows: { year: number; interest: number; principal: number }[];
 }) {
+  const { t } = useLocale();
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={rows} margin={{ top: 8, right: 12, bottom: 0, left: 4 }}>
@@ -164,12 +180,17 @@ export function MortgageAnatomyBars({
         <Tooltip
           contentStyle={TOOLTIP_STYLE}
           formatter={(value) => tooltipEUR(value)}
-          labelFormatter={(year) => `Year ${String(year)}`}
+          labelFormatter={(year) => t("results.tooltip.year", { n: String(year) })}
         />
         <Legend wrapperStyle={LEGEND_STYLE} />
-        <Bar name="Interest (cost)" dataKey="interest" stackId="payment" fill="var(--ds-seq-1)" />
         <Bar
-          name="Principal (your wealth)"
+          name={t("results.series.interest")}
+          dataKey="interest"
+          stackId="payment"
+          fill="var(--ds-seq-1)"
+        />
+        <Bar
+          name={t("results.series.principal")}
           dataKey="principal"
           stackId="payment"
           fill="var(--ds-seq-3)"
@@ -190,6 +211,7 @@ export interface CompositionRow {
 }
 
 export function CostCompositionBars({ rows }: { rows: CompositionRow[] }) {
+  const { t } = useLocale();
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={rows} stackOffset="sign" margin={{ top: 8, right: 12, bottom: 0, left: 4 }}>
@@ -210,15 +232,40 @@ export function CostCompositionBars({ rows }: { rows: CompositionRow[] }) {
         <Tooltip
           contentStyle={TOOLTIP_STYLE}
           formatter={(value) => tooltipEUR(value)}
-          labelFormatter={(year) => `Year ${String(year)}`}
+          labelFormatter={(year) => t("results.tooltip.year", { n: String(year) })}
         />
         <Legend wrapperStyle={LEGEND_STYLE} />
         <ReferenceLine y={0} stroke="var(--ds-baseline)" />
-        <Bar name="Interest" dataKey="interest" stackId="cost" fill="var(--ds-seq-1)" />
-        <Bar name="Maintenance & taxes" dataKey="upkeep" stackId="cost" fill="var(--ds-seq-2)" />
-        <Bar name="Cost items" dataKey="items" stackId="cost" fill="var(--ds-seq-3)" />
-        <Bar name="Opportunity cost" dataKey="opportunity" stackId="cost" fill="var(--ds-seq-4)" />
-        <Bar name="Value change & credits" dataKey="credits" stackId="cost" fill="var(--ds-buy)" />
+        <Bar
+          name={t("results.series.interestShort")}
+          dataKey="interest"
+          stackId="cost"
+          fill="var(--ds-seq-1)"
+        />
+        <Bar
+          name={t("results.series.upkeep")}
+          dataKey="upkeep"
+          stackId="cost"
+          fill="var(--ds-seq-2)"
+        />
+        <Bar
+          name={t("results.series.items")}
+          dataKey="items"
+          stackId="cost"
+          fill="var(--ds-seq-3)"
+        />
+        <Bar
+          name={t("results.series.opportunity")}
+          dataKey="opportunity"
+          stackId="cost"
+          fill="var(--ds-seq-4)"
+        />
+        <Bar
+          name={t("results.series.credits")}
+          dataKey="credits"
+          stackId="cost"
+          fill="var(--ds-buy)"
+        />
       </BarChart>
     </ResponsiveContainer>
   );

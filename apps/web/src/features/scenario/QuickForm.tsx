@@ -1,14 +1,17 @@
 import { assumptionPresets, type AssumptionPresetId } from "@domus-scope/engine";
 import { type QuickData } from "../../persistence/db";
-import { formatPercent } from "../../lib/format";
-import { Card, NumberField, Segmented, SelectField, ToggleField } from "../../components/ui";
+import { formatEUR, formatPercent } from "../../lib/format";
+import { useLocale } from "../../i18n";
+import {
+  Card,
+  NumberField,
+  PercentField,
+  Segmented,
+  SelectField,
+  ToggleField,
+} from "../../components/ui";
 
 const HORIZON_PRESETS = [5, 10, 20, 30];
-
-/** Displays a stored fraction as a percentage number without float dust. */
-function toPercentDisplay(fraction: number): number {
-  return Math.round(fraction * 10_000) / 100;
-}
 
 export function QuickForm({
   value,
@@ -17,6 +20,7 @@ export function QuickForm({
   value: QuickData;
   onChange: (next: QuickData) => void;
 }) {
+  const { t } = useLocale();
   const set = <K extends keyof QuickData>(key: K, fieldValue: QuickData[K]) =>
     onChange({ ...value, [key]: fieldValue });
 
@@ -25,32 +29,35 @@ export function QuickForm({
 
   return (
     <Card className="p-4">
-      <h2 className="mb-4 text-sm font-semibold text-ink">Inputs</h2>
+      <h2 className="mb-4 text-sm font-semibold text-ink">{t("quick.inputs")}</h2>
       <div className="space-y-4">
         <NumberField
-          label="Property price"
-          suffix="€"
+          label={t("quick.price")}
+          suffix={t("suffix.eur")}
           value={value.propertyPrice}
           min={0}
           step={1_000}
+          help="price"
           onChange={(v) => set("propertyPrice", v)}
         />
         <NumberField
-          label="Equivalent monthly rent (a truly comparable home, FR-004)"
-          suffix="€/mo"
+          label={t("quick.equivalentRent")}
+          suffix={t("suffix.eurPerMonth")}
           value={value.equivalentMonthlyRent}
           min={0}
           step={50}
+          help="equivalentRent"
           onChange={(v) => set("equivalentMonthlyRent", v)}
         />
 
         <div>
           <NumberField
-            label="Horizon"
-            suffix="years"
+            label={t("quick.horizon")}
+            suffix={t("suffix.years")}
             value={value.horizonYears}
             min={1}
             step={1}
+            help="horizon"
             onChange={(v) => set("horizonYears", v)}
           />
           <div className="mt-1.5 flex gap-1.5">
@@ -72,12 +79,14 @@ export function QuickForm({
         </div>
 
         <div>
-          <span className="mb-1 block text-xs font-medium text-ink-2">Financing</span>
+          <span className="mb-1 flex items-center gap-1.5 text-xs font-medium text-ink-2">
+            {t("quick.financing")}
+          </span>
           <Segmented
-            label="Financing"
+            label={t("quick.financing")}
             options={[
-              { value: "mortgage", label: "Mortgage" },
-              { value: "cash", label: "Cash" },
+              { value: "mortgage", label: t("quick.mortgage") },
+              { value: "cash", label: t("quick.cash") },
             ]}
             value={value.financingKind}
             onChange={(kind) => set("financingKind", kind)}
@@ -87,36 +96,34 @@ export function QuickForm({
         {value.financingKind === "mortgage" ? (
           <div className="space-y-4 rounded-lg border border-hairline p-3">
             <NumberField
-              label="Down payment"
-              suffix="€"
+              label={t("quick.downPayment")}
+              suffix={t("suffix.eur")}
               value={value.downPayment}
               min={0}
               step={5_000}
+              help="downPayment"
               onChange={(v) => set("downPayment", v)}
             />
             <p className="nums -mt-2 text-xs text-ink-3">
-              Loan-to-value: {formatPercent(ltv, 0)} · mortgage{" "}
-              {new Intl.NumberFormat("it-IT", {
-                style: "currency",
-                currency: "EUR",
-                maximumFractionDigits: 0,
-              }).format(Math.max(value.propertyPrice - value.downPayment, 0))}
+              {t("quick.ltvLine", {
+                ltv: formatPercent(ltv, 0),
+                amount: formatEUR(Math.max(value.propertyPrice - value.downPayment, 0)),
+              })}
             </p>
             <div className="grid grid-cols-2 gap-3">
-              <NumberField
-                label="Rate (TAN)"
-                suffix="%"
-                value={toPercentDisplay(value.annualRate)}
-                min={0}
-                step={0.05}
-                onChange={(v) => set("annualRate", v / 100)}
+              <PercentField
+                label={t("quick.rate")}
+                value={value.annualRate}
+                help="rateTAN"
+                onChange={(annualRate) => set("annualRate", annualRate)}
               />
               <NumberField
-                label="Duration"
-                suffix="years"
+                label={t("quick.duration")}
+                suffix={t("suffix.years")}
                 value={value.durationYears}
                 min={1}
                 step={1}
+                help="durationYears"
                 onChange={(v) => set("durationYears", v)}
               />
             </div>
@@ -124,53 +131,62 @@ export function QuickForm({
         ) : null}
 
         <SelectField
-          label="How comparable is the rent to this property?"
+          label={t("quick.comparability")}
           value={value.comparability}
+          help="comparability"
           onChange={(event) =>
             set("comparability", event.target.value as QuickData["comparability"])
           }
         >
-          <option value="high">High — same zone, size and quality</option>
-          <option value="medium">Medium — close enough</option>
-          <option value="low">Low — different home (verdict becomes indicative)</option>
+          <option value="high">{t("comparability.high")}</option>
+          <option value="medium">{t("comparability.medium")}</option>
+          <option value="low">{t("comparability.low")}</option>
         </SelectField>
 
         <SelectField
-          label="Assumptions preset"
+          label={t("quick.preset")}
           value={value.assumptionPreset}
+          help="assumptionPreset"
           onChange={(event) => set("assumptionPreset", event.target.value as AssumptionPresetId)}
         >
           {Object.values(assumptionPresets).map((preset) => (
             <option key={preset.id} value={preset.id}>
-              {preset.label} — rents {formatPercent(preset.values.rentGrowth ?? 0, 0)}, home{" "}
-              {formatPercent(preset.values.homeAppreciation ?? 0, 1)}, returns{" "}
-              {formatPercent(preset.values.alternativeReturn ?? 0, 1)}
+              {t("preset.optionSummary", {
+                label: t(`preset.${preset.id}`),
+                rents: formatPercent(preset.values.rentGrowth ?? 0, 0),
+                home: formatPercent(preset.values.homeAppreciation ?? 0, 1),
+                returns: formatPercent(preset.values.alternativeReturn ?? 0, 1),
+              })}
             </option>
           ))}
         </SelectField>
 
         <div className="space-y-3 rounded-lg border border-hairline p-3">
-          <ToggleField
-            label="Check my liquidity (BR-006)"
-            checked={value.liquidityEnabled}
-            onChange={(checked) => set("liquidityEnabled", checked)}
-          />
+          <div className="flex items-center gap-1.5">
+            <ToggleField
+              label={t("quick.liquidityCheck")}
+              checked={value.liquidityEnabled}
+              onChange={(checked) => set("liquidityEnabled", checked)}
+            />
+          </div>
           {value.liquidityEnabled ? (
             <div className="grid grid-cols-2 gap-3">
               <NumberField
-                label="Available savings"
-                suffix="€"
+                label={t("quick.liquidityAvailable")}
+                suffix={t("suffix.eur")}
                 value={value.liquidityAvailable}
                 min={0}
                 step={5_000}
+                help="liquidityCheck"
                 onChange={(v) => set("liquidityAvailable", v)}
               />
               <NumberField
-                label="Emergency fund"
-                suffix="€"
+                label={t("quick.emergencyFund")}
+                suffix={t("suffix.eur")}
                 value={value.emergencyFund}
                 min={0}
                 step={1_000}
+                help="emergencyFund"
                 onChange={(v) => set("emergencyFund", v)}
               />
             </div>

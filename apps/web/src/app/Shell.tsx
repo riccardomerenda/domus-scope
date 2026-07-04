@@ -2,11 +2,13 @@ import { NavLink, Outlet } from "react-router-dom";
 import {
   CompareIcon,
   HomeIcon,
+  InfoIcon,
   MoonIcon,
   SettingsIcon,
   SlidersIcon,
   SunIcon,
 } from "../components/Icons";
+import { useLocale } from "../i18n";
 import { useTheme } from "./theme";
 
 function navClass({ isActive }: { isActive: boolean }): string {
@@ -28,42 +30,47 @@ function Wordmark() {
 
 function ThemeToggle() {
   const { isDark, setPreference } = useTheme();
+  const { t } = useLocale();
   return (
     <button
       type="button"
       onClick={() => setPreference(isDark ? "light" : "dark")}
       className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm text-ink-2 hover:bg-hairline/40 hover:text-ink"
-      aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
+      aria-label={isDark ? t("shell.themeToLight") : t("shell.themeToDark")}
     >
       {isDark ? <SunIcon /> : <MoonIcon />}
-      {isDark ? "Light theme" : "Dark theme"}
+      {isDark ? t("shell.themeToLight") : t("shell.themeToDark")}
     </button>
   );
 }
 
 export function Shell() {
+  const { t } = useLocale();
   return (
     <div className="flex min-h-screen">
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-hairline bg-surface py-5 md:flex">
         <Wordmark />
         <nav className="mt-6 flex flex-col gap-1 px-2">
           <NavLink to="/" end className={navClass}>
-            <HomeIcon /> Dashboard
+            <HomeIcon /> {t("nav.dashboard")}
           </NavLink>
           <NavLink to="/compare" className={navClass}>
-            <CompareIcon /> Compare
+            <CompareIcon /> {t("nav.compare")}
           </NavLink>
           <NavLink to="/profile" className={navClass}>
-            <SlidersIcon /> Profile & Assumptions
+            <SlidersIcon /> {t("nav.profile")}
+          </NavLink>
+          <NavLink to="/help" className={navClass}>
+            <InfoIcon /> {t("nav.help")}
           </NavLink>
           <NavLink to="/settings" className={navClass}>
-            <SettingsIcon /> Settings
+            <SettingsIcon /> {t("nav.settings")}
           </NavLink>
         </nav>
         <div className="mt-auto px-2">
           <ThemeToggle />
           <p className="px-3 pt-2 text-[10px] leading-relaxed text-ink-3">
-            Local-first: your data never leaves this device.
+            {t("shell.localFirst")}
           </p>
         </div>
       </aside>
@@ -80,6 +87,9 @@ export function Shell() {
             </NavLink>
             <NavLink to="/profile" className={navClass}>
               <SlidersIcon />
+            </NavLink>
+            <NavLink to="/help" className={navClass}>
+              <InfoIcon />
             </NavLink>
             <NavLink to="/settings" className={navClass}>
               <SettingsIcon />
