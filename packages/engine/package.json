@@ -1,6 +1,7 @@
 {
   "name": "@domus-scope/engine",
   "version": "0.1.0",
+  "license": "MIT",
   "private": true,
   "type": "module",
   "description": "Pure domain engine for DomusScope: schemas, mortgage math, simulation lenses, rules, explanation traces.",

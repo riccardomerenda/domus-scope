@@ -17,12 +17,15 @@ import { SettingsPage } from "./features/settings/SettingsPage";
 const container = document.getElementById("root");
 if (!container) throw new Error("Missing #root element");
 
+// Follows Vite's base so subpath deploys (GitHub Pages) route correctly.
+const basename = import.meta.env.BASE_URL.replace(/\/$/, "");
+
 createRoot(container).render(
   <StrictMode>
     <ThemeProvider>
       <LocaleProvider>
         <ExplainProvider>
-          <BrowserRouter>
+          <BrowserRouter basename={basename}>
             <Routes>
               <Route element={<Shell />}>
                 <Route index element={<DashboardPage />} />

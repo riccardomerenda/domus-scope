@@ -4,6 +4,8 @@ import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
+  // Subpath deploys (e.g. GitHub Pages) set BASE_PATH=/repo-name/.
+  base: process.env.BASE_PATH ?? "/",
   plugins: [
     react(),
     tailwindcss(),

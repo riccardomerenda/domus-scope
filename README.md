@@ -1,16 +1,29 @@
 # DomusScope
 
+[![CI](https://github.com/riccardomerenda/domus-scope/actions/workflows/ci.yml/badge.svg)](https://github.com/riccardomerenda/domus-scope/actions/workflows/ci.yml)
+[![Deploy](https://github.com/riccardomerenda/domus-scope/actions/workflows/deploy.yml/badge.svg)](https://github.com/riccardomerenda/domus-scope/actions/workflows/deploy.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 **A local-first decision lab for the rent vs. buy vs. cash-purchase question.**
+
+**[Try it live →](https://riccardomerenda.github.io/domus-scope/)** — no account, no
+backend; everything stays in your browser.
 
 DomusScope is a personal decision-support tool for real-estate choices. It does not answer
 "is buying better than renting?" with a slogan — it simulates both paths over time,
 separates _unrecoverable costs_ from _wealth accumulation_, makes every assumption
 explicit and editable, and shows how fragile each conclusion is when assumptions change.
 
-> Derived from the domain document `documento_progetto_app_dominio_immobiliare.md`
-> (Italian). This repository contains the English-language critique, refined domain
-> specification, architecture, UI design, and implementation roadmap — followed by the
-> implementation itself.
+> Derived from the [source domain document](docs/00-source-document.md). This repository
+> contains the critique, refined domain specification, architecture, UI design, and
+> implementation roadmap — followed by the implementation itself.
+
+## Screenshots
+
+|                                                                                                                                       |                                                                                                             |
+| :-----------------------------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------: |
+| ![Quick mode with derived-threshold gauge](docs/screenshots/quick.png)<br>_Quick mode: derived threshold R\*, year-1 costs, warnings_ |   ![Explanation drawer](docs/screenshots/explain.png)<br>_Every number opens into its formula and inputs_   |
+|      ![Results with two-lens charts](docs/screenshots/results.png)<br>_Results: net worth, break-evens, "if you sold in year t"_      | ![Sensitivity analysis](docs/screenshots/sensitivity.png)<br>_Sensitivity: tornado, verdict flips, heatmap_ |
 
 ---
 
@@ -64,7 +77,7 @@ DomusScope evaluates every scenario through **two complementary lenses**:
 
 Full rationale and rejected alternatives: [`docs/03-architecture.md`](docs/03-architecture.md).
 
-## Planned repository layout
+## Repository layout
 
 ```
 domus-scope/
@@ -74,20 +87,20 @@ domus-scope/
 ├── apps/
 │   └── web/             # React SPA (PWA): scenario workspace, results, sensitivity,
 │                        # comparison, decision journal, settings
-├── docs/                # Project documentation (this planning set)
-└── documento_progetto_app_dominio_immobiliare.md   # Original domain document (Italian)
+└── docs/                # Source document, planning set, testing guide
 ```
 
 ## Documentation
 
-| Document                                               | Content                                                                                                              |
-| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
-| [`docs/01-critique.md`](docs/01-critique.md)           | Critical review of the source domain document: validated strengths, weaknesses, gaps                                 |
-| [`docs/02-domain-spec.md`](docs/02-domain-spec.md)     | Refined domain specification: methodology, corrected formulas, input/output catalogs, validation rules, test vectors |
-| [`docs/03-architecture.md`](docs/03-architecture.md)   | Stack decision, monorepo layout, engine design, configuration system, persistence, testing strategy                  |
-| [`docs/04-ui-design.md`](docs/04-ui-design.md)         | Information architecture, screens, design language, chart set, component inventory                                   |
-| [`docs/05-roadmap.md`](docs/05-roadmap.md)             | Phased implementation plan with milestones, tasks, and acceptance criteria                                           |
-| [`docs/06-testing-guide.md`](docs/06-testing-guide.md) | Hands-on guide: setup in three commands + a guided tour of every feature                                             |
+| Document                                                   | Content                                                                                                              |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| [`docs/00-source-document.md`](docs/00-source-document.md) | The original domain document the project was built from (translated from Italian)                                    |
+| [`docs/01-critique.md`](docs/01-critique.md)               | Critical review of the source domain document: validated strengths, weaknesses, gaps                                 |
+| [`docs/02-domain-spec.md`](docs/02-domain-spec.md)         | Refined domain specification: methodology, corrected formulas, input/output catalogs, validation rules, test vectors |
+| [`docs/03-architecture.md`](docs/03-architecture.md)       | Stack decision, monorepo layout, engine design, configuration system, persistence, testing strategy                  |
+| [`docs/04-ui-design.md`](docs/04-ui-design.md)             | Information architecture, screens, design language, chart set, component inventory                                   |
+| [`docs/05-roadmap.md`](docs/05-roadmap.md)                 | Phased implementation plan with milestones, tasks, and acceptance criteria                                           |
+| [`docs/06-testing-guide.md`](docs/06-testing-guide.md)     | Hands-on guide: setup in three commands + a guided tour of every feature                                             |
 
 ## Status
 

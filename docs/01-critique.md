@@ -1,6 +1,6 @@
 # Critical Review of the Source Domain Document
 
-Target: `documento_progetto_app_dominio_immobiliare.md` (v1.0, Italian).
+Target: [`00-source-document.md`](00-source-document.md) (v1.0, translated from Italian).
 This review validates the document's strongest points, identifies its weaknesses, and
 lists what is missing. Every weakness and gap is paired with the resolution adopted in
 [`02-domain-spec.md`](02-domain-spec.md).
