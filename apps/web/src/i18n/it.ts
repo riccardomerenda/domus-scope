@@ -60,6 +60,8 @@ export const it: Record<MessageKey, string> = {
   "warning.W-008":
     "L'orizzonte supera l'estinzione del mutuo: negli anni successivi non c'è rata, solo costi di possesso.",
   "warning.W-009": "Un'assunzione è fuori dai limiti di plausibilità configurati.",
+  "warning.W-010":
+    "Con le tue assunzioni, il prezzo che puoi difendere è sotto quanto ottiene una trattativa tipica da questo prezzo richiesto.",
 
   /* ---------- engine verdict reasons ---------- */
   "reason.quick.rule.above":
@@ -159,6 +161,7 @@ export const it: Record<MessageKey, string> = {
   "scenario.tab.inputs": "Dati",
   "scenario.tab.results": "Risultati",
   "scenario.tab.sensitivity": "Sensibilità",
+  "scenario.tab.negotiation": "Trattativa",
   "scenario.tab.journal": "Diario",
   "scenario.tabAria": "Sezione dell'area di lavoro",
   "scenario.report": "Report",
@@ -212,6 +215,7 @@ export const it: Record<MessageKey, string> = {
 
   /* ---------- analytical inputs sections ---------- */
   "inputs.property": "Immobile",
+  "inputs.marketValue": "Valore di mercato (se ≠ prezzo)",
   "inputs.cadastral": "Valore catastale (base dell'imposta di registro)",
   "inputs.zone": "Zona",
   "inputs.size": "Superficie",
@@ -436,7 +440,82 @@ export const it: Record<MessageKey, string> = {
   "compare.footnote":
     "Qui i colori delle serie identificano gli scenari, non le entità (affitto/acquisto/contanti mantengono i loro colori altrove).",
 
+  /* ---------- negotiation ---------- */
+  "negotiation.inputs": "Dati della trattativa",
+  "negotiation.inputsHint":
+    "Prezzo richiesto e sconto tipico individuano l'intervallo plausibile di chiusura; il tuo prezzo di riserva è derivato dalle tue assunzioni, mai memorizzato (BR-023).",
+  "negotiation.asking": "Prezzo richiesto",
+  "negotiation.typicalDiscount": "Sconto tipico",
+  "negotiation.anchor": "Àncora del valore: {value}",
+  "negotiation.anchorDefault":
+    "coincide col prezzo — imposta un valore di mercato in Dati → Immobile se l'annuncio è fuori prezzo",
+  "negotiation.anchorSet": "valore di mercato impostato in Dati → Immobile",
+  "negotiation.needAsking":
+    "Inserisci il prezzo richiesto per vedere la finestra negoziale rispetto al mercato.",
+  "negotiation.reservationTitle": "Il tuo prezzo di riserva",
+  "negotiation.reservationLens": "lente patrimonio · derivato",
+  "negotiation.reservationHint":
+    "Il prezzo in cui comprare e affittare-e-investire si equivalgono al tuo orizzonte, con le tue assunzioni. Oltre, alzarsi dal tavolo vince per i tuoi stessi numeri.",
+  "negotiation.walkAway": "Prezzo walk-away",
+  "negotiation.greyZone": "Zona grigia (verdetto indeciso)",
+  "negotiation.stressed": "Sotto stress",
+  "negotiation.stressedRange": "{pessimistic} (pessimistico) — {optimistic} (ottimistico)",
+  "negotiation.stressedHint":
+    "Spostamento congiunto di ±1pp su affitti, rivalutazione, rendimenti e tasso (±0,5pp manutenzione): quanto si sposta il confine se le tue assunzioni sono sbagliate in una delle due direzioni.",
+  "negotiation.buyAlwaysWins": "Comprare batte affittare a ogni prezzo esplorato (fino a {max}).",
+  "negotiation.rentAlwaysWins": "Affittare vince a ogni prezzo esplorato (fino a {min}).",
+  "negotiation.windowTitle": "Finestra negoziale",
+  "negotiation.expected": "Prezzo atteso con lo sconto tipico: {value}",
+  "negotiation.requiredDiscount": "Sconto che ti serve: {value}",
+  "negotiation.window.askingAcceptable":
+    "Per te anche il prezzo richiesto batte l'affitto — tutto ciò che ottieni in meno è guadagno.",
+  "negotiation.window.withinTypical":
+    "Una trattativa tipica può raggiungere il tuo confine: la tua zona d'accordo è {low} – {high}.",
+  "negotiation.window.needsAtypicalDiscount":
+    "Il tuo confine è sotto l'intervallo tipico di chiusura: ti serve uno sconto più che tipico.",
+  "negotiation.window.none":
+    "Nessun prezzo nell'intervallo esplorato batte l'affitto con le tue assunzioni.",
+  "negotiation.bar.expected": "Atteso",
+  "negotiation.bar.asking": "Richiesto",
+  "negotiation.bar.reservation": "Tuo max",
+  "negotiation.bar.buySide": "← vince comprare",
+  "negotiation.bar.rentSide": "vince affittare →",
+  "negotiation.bar.stressTitle": "Intervallo stressato: {low} – {high}",
+  "negotiation.bar.greyTitle": "Zona grigia: {low} – {high}",
+  "negotiation.bar.aria":
+    "Scala di prezzo da {min} a {max}; il tuo prezzo di riserva è {reservation}",
+  "negotiation.concessionsTitle": "Concessioni",
+  "negotiation.concessionsHint":
+    "Dai un prezzo a ciò che ricevi o concedi oltre al prezzo stesso; il saldo sposta il tuo confine walk-away (FR-023).",
+  "negotiation.concessionKind": "Tipo",
+  "concession.earlyPossession": "Ingresso anticipato",
+  "concession.furniture": "Arredi inclusi",
+  "concession.remediation": "Sanatoria a tuo carico",
+  "concession.custom": "Personalizzata",
+  "negotiation.direction": "Direzione",
+  "negotiation.youReceive": "Ricevi",
+  "negotiation.youGive": "Concedi",
+  "negotiation.months": "Mesi",
+  "negotiation.amount": "Importo",
+  "negotiation.labelField": "Etichetta",
+  "negotiation.monthsEquivalent": "{months} mesi × {rent} = {value}",
+  "negotiation.deleteConcession": "Elimina concessione {label}",
+  "negotiation.balance": "Saldo (ricevuto − concesso): {value}",
+  "negotiation.adjustedWalkAway": "Walk-away rettificato: {value}",
+
   /* ---------- journal ---------- */
+  "journal.offers": "Offerte e controproposte",
+  "journal.offersHint":
+    "Ogni prezzo offerto viene rivalutato dal motore: verdetto e vantaggio come se chiudessi a quella cifra.",
+  "journal.offerParty": "Parte",
+  "journal.party.you": "Tu",
+  "journal.party.counterpart": "Controparte",
+  "journal.offerPrice": "Prezzo offerto",
+  "journal.offerNote": "Nota",
+  "journal.offerNotePlaceholder": "es. “Rifiutata, controproposta a 285k”",
+  "journal.addOffer": "Registra offerta",
+  "journal.kind.offer": "Offerta",
+  "journal.deleteOffer": "Elimina offerta",
   "journal.qualitative": "Oltre i numeri",
   "journal.qualitativeLens": "mai mescolato agli euro",
   "journal.qualitativeHint":
@@ -596,6 +675,7 @@ export const it: Record<MessageKey, string> = {
   "help.group.inputs": "Dati dello scenario",
   "help.group.assumptions": "Assunzioni",
   "help.group.personal": "Profilo e preferenze",
+  "help.group.negotiation": "Trattativa",
   "help.what": "Cos'è",
   "help.why": "Perché conta",
   "help.typical": "Valori tipici (Italia)",

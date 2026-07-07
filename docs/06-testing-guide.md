@@ -100,9 +100,18 @@ Two modes per scenario:
 4. **Sensitivity tab**: which assumption moves the result most (tornado), which flips
    the verdict (outlined in red and listed), the conservative/base/optimistic
    side-by-side, and the **verdict heatmap** across rent growth × home appreciation.
-5. **Journal tab**:
+5. **Negotiation tab**: your derived **walk-away price** (the price where buying stops
+   beating renting-and-investing), with a grey band and a stressed range. Enter the
+   **asking price** → the ZOPA bar shows where your boundary sits against the asking
+   price and the typical negotiated discount; W-010 fires when you'd need an atypical
+   discount. Add **concessions** (e.g. early possession = months of rent saved) to see
+   how much price room a trade creates. If the deal is below market value, set
+   _Market value_ in the Inputs → Property card and watch the boundary move.
+6. **Journal tab**:
    - Score the qualitative factors (stability, flexibility, …) → the preference index
      appears (weights are in Profile & Assumptions).
+   - **Offers & counter-offers**: log each offer — the engine shows the verdict and
+     advantage as if you closed at that price.
    - Add notes / visits / pros / cons.
    - **Record the final decision** — it freezes a snapshot of today's inputs.
    - **History**: save labeled snapshots, then change an input and use _Compare to now_

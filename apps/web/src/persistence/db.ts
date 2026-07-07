@@ -1,6 +1,8 @@
 import Dexie, { type EntityTable } from "dexie";
 import {
+  DEFAULT_TYPICAL_DISCOUNT,
   type AssumptionPresetId,
+  type Concession,
   type CostItem,
   type EconomicAssumptions,
 } from "@domus-scope/engine";
@@ -38,10 +40,31 @@ export interface QuickData {
   emergencyFund: number;
 }
 
+/** Negotiation-lens inputs (FR-022/FR-023): the asking side of the ZOPA view. */
+export interface NegotiationData {
+  askingPrice: number | null;
+  /** Fraction of the asking price a typical negotiation concedes. */
+  typicalDiscount: number;
+  concessions: Concession[];
+}
+
+export const defaultNegotiationData: NegotiationData = {
+  askingPrice: null,
+  typicalDiscount: DEFAULT_TYPICAL_DISCOUNT,
+  concessions: [],
+};
+
+/** Normalizes records stored before Phase 8 (field absent → defaults). */
+export function negotiationOf(data: AnalyticalData): NegotiationData {
+  return data.negotiation ?? defaultNegotiationData;
+}
+
 /** Analytical-mode data: mirrors the engine's ScenarioInput, storage-friendly. */
 export interface AnalyticalData {
   property: {
     price: number;
+    /** Value anchor when it differs from the price (FR-021); pre-Phase-8 records lack it. */
+    marketValue?: number | null | undefined;
     cadastralValue: number | null;
     zone: string;
     sizeSqm: number | null;
@@ -63,6 +86,8 @@ export interface AnalyticalData {
   sellingCostRate: number;
   /** Inject the global profile into the simulation (liquidity warnings, FR-015). */
   profileEnabled: boolean;
+  /** Negotiation inputs (Phase 8); pre-Phase-8 records lack it — use negotiationOf(). */
+  negotiation?: NegotiationData | undefined;
 }
 
 export type ScenarioMode = "quick" | "analytical";
@@ -100,7 +125,15 @@ export interface StoredScenario {
   qualitative: QualitativeScores;
 }
 
-export type JournalKind = "note" | "visit" | "pro" | "con" | "decision";
+export type JournalKind = "note" | "visit" | "pro" | "con" | "decision" | "offer";
+
+export type OfferParty = "you" | "counterpart";
+
+/** Offer-log payload (FR-024): the engine re-evaluates each offered price. */
+export interface OfferData {
+  party: OfferParty;
+  price: number;
+}
 
 export interface JournalEntry {
   id: string;
@@ -111,6 +144,8 @@ export interface JournalEntry {
   /** Decision entries carry a short label and freeze a revision (FR-016). */
   decision: string | null;
   revisionId: string | null;
+  /** Offer entries only; pre-Phase-8 records lack the field. */
+  offer?: OfferData | null | undefined;
 }
 
 /** Immutable input snapshot (FR-020/NFR-007): results are recomputed, never stored. */

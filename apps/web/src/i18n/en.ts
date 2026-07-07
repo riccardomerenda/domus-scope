@@ -60,6 +60,8 @@ export const en = {
   "warning.W-008":
     "The horizon extends beyond the mortgage payoff: later years have no payment, only ownership costs.",
   "warning.W-009": "An assumption lies outside the configured plausibility bounds.",
+  "warning.W-010":
+    "Under your assumptions, the price you can defend is below what a typical negotiation achieves from this asking price.",
 
   /* ---------- engine verdict reasons ---------- */
   "reason.quick.rule.above":
@@ -157,6 +159,7 @@ export const en = {
   "scenario.tab.inputs": "Inputs",
   "scenario.tab.results": "Results",
   "scenario.tab.sensitivity": "Sensitivity",
+  "scenario.tab.negotiation": "Negotiation",
   "scenario.tab.journal": "Journal",
   "scenario.tabAria": "Workspace tab",
   "scenario.report": "Report",
@@ -210,6 +213,7 @@ export const en = {
 
   /* ---------- analytical inputs sections ---------- */
   "inputs.property": "Property",
+  "inputs.marketValue": "Market value (if ≠ price)",
   "inputs.cadastral": "Cadastral value (registration tax basis)",
   "inputs.zone": "Zone",
   "inputs.size": "Size",
@@ -432,7 +436,81 @@ export const en = {
   "compare.footnote":
     "The series colors here identify scenarios, not entities (rent/buy/cash keep their own colors elsewhere).",
 
+  /* ---------- negotiation ---------- */
+  "negotiation.inputs": "Negotiation inputs",
+  "negotiation.inputsHint":
+    "The asking price and the typical discount locate the plausible closing range; your reservation price is derived from your assumptions, never stored (BR-023).",
+  "negotiation.asking": "Asking price",
+  "negotiation.typicalDiscount": "Typical discount",
+  "negotiation.anchor": "Value anchor: {value}",
+  "negotiation.anchorDefault":
+    "defaults to the price — set a market value in Inputs → Property if the listing is mispriced",
+  "negotiation.anchorSet": "market value set in Inputs → Property",
+  "negotiation.needAsking":
+    "Enter the asking price to see the negotiation window against the market.",
+  "negotiation.reservationTitle": "Your reservation price",
+  "negotiation.reservationLens": "wealth lens · derived",
+  "negotiation.reservationHint":
+    "The price where buying and renting-and-investing tie at your horizon, under your assumptions. Above it, walking away wins by your own numbers.",
+  "negotiation.walkAway": "Walk-away price",
+  "negotiation.greyZone": "Grey zone (verdict undecided)",
+  "negotiation.stressed": "Under stress",
+  "negotiation.stressedRange": "{pessimistic} (pessimistic) — {optimistic} (optimistic)",
+  "negotiation.stressedHint":
+    "Joint ±1pp shift of rents, appreciation, returns and mortgage rate (±0.5pp maintenance): how far the boundary moves if your assumptions are wrong in either direction.",
+  "negotiation.buyAlwaysWins": "Buying beats renting at every price searched (up to {max}).",
+  "negotiation.rentAlwaysWins": "Renting wins at every price searched (down to {min}).",
+  "negotiation.windowTitle": "Negotiation window",
+  "negotiation.expected": "Expected price at the typical discount: {value}",
+  "negotiation.requiredDiscount": "Discount you need: {value}",
+  "negotiation.window.askingAcceptable":
+    "Even the asking price beats renting for you — anything below it is upside.",
+  "negotiation.window.withinTypical":
+    "A typical negotiation can reach your boundary: your deal zone is {low} – {high}.",
+  "negotiation.window.needsAtypicalDiscount":
+    "Your boundary sits below the typical closing range: you need a larger-than-typical discount.",
+  "negotiation.window.none": "No price in the searched range beats renting under your assumptions.",
+  "negotiation.bar.expected": "Expected",
+  "negotiation.bar.asking": "Asking",
+  "negotiation.bar.reservation": "Your max",
+  "negotiation.bar.buySide": "← buying wins",
+  "negotiation.bar.rentSide": "renting wins →",
+  "negotiation.bar.stressTitle": "Stressed range: {low} – {high}",
+  "negotiation.bar.greyTitle": "Grey zone: {low} – {high}",
+  "negotiation.bar.aria":
+    "Price scale from {min} to {max}; your reservation price is {reservation}",
+  "negotiation.concessionsTitle": "Concessions",
+  "negotiation.concessionsHint":
+    "Price what you receive or give beyond the price itself; the balance shifts your walk-away boundary (FR-023).",
+  "negotiation.concessionKind": "Kind",
+  "concession.earlyPossession": "Early possession",
+  "concession.furniture": "Furniture included",
+  "concession.remediation": "Remediation you absorb",
+  "concession.custom": "Custom",
+  "negotiation.direction": "Direction",
+  "negotiation.youReceive": "You receive",
+  "negotiation.youGive": "You give",
+  "negotiation.months": "Months",
+  "negotiation.amount": "Amount",
+  "negotiation.labelField": "Label",
+  "negotiation.monthsEquivalent": "{months} months × {rent} = {value}",
+  "negotiation.deleteConcession": "Delete concession {label}",
+  "negotiation.balance": "Balance (received − given): {value}",
+  "negotiation.adjustedWalkAway": "Adjusted walk-away: {value}",
+
   /* ---------- journal ---------- */
+  "journal.offers": "Offers & counter-offers (FR-024)",
+  "journal.offersHint":
+    "Each offered price is re-evaluated by the engine: verdict and advantage as if you closed at that number.",
+  "journal.offerParty": "Side",
+  "journal.party.you": "You",
+  "journal.party.counterpart": "Counterpart",
+  "journal.offerPrice": "Offered price",
+  "journal.offerNote": "Note",
+  "journal.offerNotePlaceholder": "e.g. “Refused, countered at 285k”",
+  "journal.addOffer": "Record offer",
+  "journal.kind.offer": "Offer",
+  "journal.deleteOffer": "Delete offer",
   "journal.qualitative": "Beyond the numbers (BR-015)",
   "journal.qualitativeLens": "never mixed with euros",
   "journal.qualitativeHint":
@@ -592,6 +670,7 @@ export const en = {
   "help.group.inputs": "Scenario inputs",
   "help.group.assumptions": "Assumptions",
   "help.group.personal": "Profile & preferences",
+  "help.group.negotiation": "Negotiation",
   "help.what": "What it is",
   "help.why": "Why it matters",
   "help.typical": "Typical values (Italy)",

@@ -17,7 +17,8 @@ import { type ScenarioInput } from "../schemas/scenario-input";
  * distinction, not a data fork).
  *
  * Time conventions:
- * - `propertyValueEndOfYear(0)` = price; end of year t = price × (1+g)^t.
+ * - `propertyValueEndOfYear(0)` = market value (defaults to the price paid);
+ *   end of year t = marketValue × (1+g)^t.
  * - Year-t rent = base rent × (1+rentGrowth)^(t−1): year 1 is the base rent.
  * - Percent-of-value amounts use the START-of-year value, so year 1 uses the
  *   purchase price exactly (matches the source-document examples).
@@ -50,10 +51,13 @@ export function buildContext(
 ): ProjectionContext {
   const horizonYears = input.horizonYears;
   const price = input.property.price;
+  // FR-021: the value curve anchors to the market value, not the price paid,
+  // so a below-market purchase is day-0 equity, not phantom appreciation.
+  const marketValue = input.property.marketValue ?? price;
   const baseAnnualRent = input.rentAlternative.equivalentMonthlyRent * 12;
 
   const propertyValueEndOfYear = (t: number): number =>
-    price * Math.pow(1 + assumptions.homeAppreciation, t);
+    marketValue * Math.pow(1 + assumptions.homeAppreciation, t);
   const annualRentAt = (t: number): number =>
     baseAnnualRent * Math.pow(1 + assumptions.rentGrowth, t - 1);
   const deflatorAt = (t: number): number => Math.pow(1 + assumptions.inflation, t);

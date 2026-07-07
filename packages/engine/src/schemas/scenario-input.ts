@@ -5,7 +5,14 @@ import { economicAssumptionsSchema } from "./assumptions";
 import { financingSchema } from "./financing";
 
 export const propertySchema = z.object({
+  /** Transaction price: what you pay. Drives the outlay and the mortgage principal. */
   price: positiveMoney,
+  /**
+   * Market value: what the home is worth (Phase 8, FR-021). Anchors the
+   * appreciation trajectory and every percent-of-value cost, so a bargain
+   * purchase (price < value) shows up as day-0 equity. Defaults to `price`.
+   */
+  marketValue: positiveMoney.optional(),
   /** Basis for Italian registration tax on existing homes (G1). */
   cadastralValue: money.optional(),
   zone: z.string().default(""),

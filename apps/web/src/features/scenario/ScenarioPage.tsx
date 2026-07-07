@@ -19,6 +19,7 @@ import { QuickForm } from "./QuickForm";
 import { QuickResultsPanel } from "./QuickResultsPanel";
 import { InputsPanel } from "./analytical/InputsPanel";
 import { JournalPanel } from "./analytical/JournalPanel";
+import { NegotiationPanel } from "./analytical/NegotiationPanel";
 import { ResultsPanel } from "./analytical/ResultsPanel";
 import { SensitivityPanel } from "./analytical/SensitivityPanel";
 
@@ -119,7 +120,9 @@ function AnalyticalWorkspace({ scenario }: { scenario: StoredScenario }) {
   const [data, setData] = useState<AnalyticalData>(
     () => scenario.analytical ?? quickToAnalytical(scenario.quick),
   );
-  const [tab, setTab] = useState<"inputs" | "results" | "sensitivity" | "journal">("inputs");
+  const [tab, setTab] = useState<"inputs" | "results" | "sensitivity" | "negotiation" | "journal">(
+    "inputs",
+  );
   useDebouncedSave(
     () => void updateScenario(scenario.id, { analytical: data }),
     [data, scenario.id],
@@ -141,13 +144,14 @@ function AnalyticalWorkspace({ scenario }: { scenario: StoredScenario }) {
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="w-[30rem] max-w-full">
+        <div className="w-[38rem] max-w-full">
           <Segmented
             label={t("scenario.tabAria")}
             options={[
               { value: "inputs", label: t("scenario.tab.inputs") },
               { value: "results", label: t("scenario.tab.results") },
               { value: "sensitivity", label: t("scenario.tab.sensitivity") },
+              { value: "negotiation", label: t("scenario.tab.negotiation") },
               { value: "journal", label: t("scenario.tab.journal") },
             ]}
             value={tab}
@@ -175,6 +179,8 @@ function AnalyticalWorkspace({ scenario }: { scenario: StoredScenario }) {
           fragility={sensitivity?.fragility.rating}
           epilogue={{ scores: scenario.qualitative, weights: appConfig.qualitativeWeights }}
         />
+      ) : tab === "negotiation" ? (
+        <NegotiationPanel data={data} onChange={setData} outcome={outcome} config={config} />
       ) : tab === "journal" ? (
         <JournalPanel scenario={scenario} data={data} outcome={outcome} appConfig={appConfig} />
       ) : outcome.input && sensitivity ? (

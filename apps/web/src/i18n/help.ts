@@ -43,6 +43,15 @@ export const HELP_GROUPS = {
     "recurringTaxRate",
   ],
   personal: ["liquidityCheck", "emergencyFund", "profileEnabled", "qualitative", "weights"],
+  negotiation: [
+    "marketValue",
+    "askingPrice",
+    "typicalDiscount",
+    "reservationPrice",
+    "zopa",
+    "concessions",
+    "offerLog",
+  ],
 } as const;
 
 export type HelpTopicId = (typeof HELP_GROUPS)[keyof typeof HELP_GROUPS][number];
@@ -264,6 +273,58 @@ const en: Record<HelpTopicId, HelpEntry> = {
     what: "How much each qualitative factor matters to you, 0 (irrelevant) to 10 (decisive). Set once in your profile.",
     why: "The preference index is the weighted average of your scenario scores; a weight of 0 removes a factor entirely.",
   },
+
+  /* ---- negotiation ---- */
+  marketValue: {
+    title: "Market value",
+    what: "What the home is actually worth on the market, independent of what you pay. It anchors the appreciation curve and every percent-of-value figure (maintenance, ownership taxes, selling costs).",
+    why: "Negotiation moves the price, not the house. Anchoring the value separately makes a below-market purchase show up as day-0 equity — and overpaying as an instant loss.",
+    typical:
+      "Comparable sales in the zone, Agenzia delle Entrate registered prices (OMI), or an independent appraisal.",
+    pitfall:
+      "Leaving it empty equates value with price: fine before negotiating, wrong while you negotiate.",
+  },
+  askingPrice: {
+    title: "Asking price",
+    what: "The price the seller advertises.",
+    why: "It anchors the negotiation: together with the typical discount it locates the plausible closing range your reservation price is judged against.",
+    pitfall:
+      "Asking prices embed negotiation room by design — they are an opening position, not a valuation.",
+  },
+  typicalDiscount: {
+    title: "Typical discount",
+    what: "The average gap between asking and closing prices in the market. Expected price = asking × (1 − discount).",
+    why: "If the discount you need is well above the typical one, the deal needs an atypically generous seller — better to know before you start (W-010).",
+    typical:
+      "Banca d'Italia's housing-market survey reports ≈8–9% on average; it varies with market conditions and how long the listing has sat.",
+    direction: "Higher → widens the plausible window below the asking price.",
+  },
+  reservationPrice: {
+    title: "Reservation price (your walk-away)",
+    what: "The maximum price at which buying still beats renting-and-investing for you: the price where the Wealth-lens advantage crosses zero, derived from your own assumptions and never stored (BR-023).",
+    why: "It is the boundary of your best alternative (BATNA): above it, by your own numbers, you are better off walking away and keeping the rent-and-invest path. The grey band and the stressed range show how firm the boundary is.",
+    pitfall:
+      "It is a boundary, not a target: opening at your reservation price leaves you no room.",
+  },
+  zopa: {
+    title: "Negotiation window (ZOPA)",
+    what: "The overlap between prices plausible for the seller (asking price down to the typical discount) and prices acceptable to you (up to your reservation price).",
+    why: "If your boundary sits inside the plausible range, a normal negotiation can close the deal; if it sits below it, only an atypical discount works.",
+    pitfall:
+      "The app cannot know the seller's true minimum: the window uses observable market anchors, not their private reservation price.",
+  },
+  concessions: {
+    title: "Concessions (price-equivalents)",
+    what: "Non-price variables translated into euros for you: early possession = months of rent you stop paying; furniture included = what you would otherwise spend; remediation you absorb = its quoted cost.",
+    why: "Negotiations that stall on price alone divide the pie; pricing what you receive or give shows how much room a swap creates. Receiving value shifts your acceptable price up, giving value shifts it down.",
+    pitfall:
+      "These are values to YOU. Their value to the seller differs — and that asymmetry is exactly what makes trades possible.",
+  },
+  offerLog: {
+    title: "Offer log",
+    what: "Offers and counter-offers recorded in the journal with date, side, and price; each one is re-evaluated by the engine at that price.",
+    why: "It answers “was each step defensible?” and keeps the negotiation history next to the decision record and its revisions.",
+  },
 };
 
 const it: Record<HelpTopicId, HelpEntry> = {
@@ -476,6 +537,58 @@ const it: Record<HelpTopicId, HelpEntry> = {
     title: "Pesi dei fattori",
     what: "Quanto conta per te ciascun fattore qualitativo, da 0 (irrilevante) a 10 (decisivo). Si imposta una volta nel profilo.",
     why: "L'indice di preferenza è la media pesata dei punteggi dello scenario; un peso 0 esclude del tutto un fattore.",
+  },
+
+  /* ---- negotiation ---- */
+  marketValue: {
+    title: "Valore di mercato",
+    what: "Quanto vale davvero la casa sul mercato, indipendentemente da quanto la paghi. Àncora la curva di rivalutazione e ogni voce in percentuale del valore (manutenzione, imposte di possesso, costi di vendita).",
+    why: "La trattativa muove il prezzo, non la casa. Ancorare il valore separatamente fa emergere un acquisto sotto mercato come equity dal giorno zero — e un sovrapprezzo come perdita immediata.",
+    typical:
+      "Compravendite comparabili in zona, quotazioni OMI dell'Agenzia delle Entrate o una perizia indipendente.",
+    pitfall:
+      "Lasciarlo vuoto equipara valore e prezzo: va bene prima di trattare, è sbagliato mentre tratti.",
+  },
+  askingPrice: {
+    title: "Prezzo richiesto",
+    what: "Il prezzo a cui il venditore pubblicizza l'immobile.",
+    why: "È l'àncora della trattativa: insieme allo sconto tipico individua l'intervallo plausibile di chiusura contro cui giudicare il tuo prezzo di riserva.",
+    pitfall:
+      "I prezzi richiesti incorporano margine negoziale per costruzione — sono una posizione di apertura, non una valutazione.",
+  },
+  typicalDiscount: {
+    title: "Sconto tipico",
+    what: "Lo scarto medio tra prezzo richiesto e prezzo di chiusura nel mercato. Prezzo atteso = richiesto × (1 − sconto).",
+    why: "Se lo sconto che ti serve è molto sopra quello tipico, l'affare richiede un venditore atipicamente generoso — meglio saperlo prima di iniziare (W-010).",
+    typical:
+      "Il sondaggio congiunturale di Banca d'Italia riporta in media ≈8–9%; varia con le condizioni di mercato e da quanto l'annuncio è fermo.",
+    direction: "Più alto → allarga la finestra plausibile sotto il prezzo richiesto.",
+  },
+  reservationPrice: {
+    title: "Prezzo di riserva (il tuo walk-away)",
+    what: "Il prezzo massimo a cui comprare batte ancora affittare-e-investire per te: il prezzo in cui il vantaggio della lente patrimonio attraversa lo zero, derivato dalle tue assunzioni e mai memorizzato (BR-023).",
+    why: "È il confine della tua alternativa migliore (BATNA): oltre quel prezzo, per i tuoi stessi numeri, ti conviene alzarti dal tavolo e restare su affitto-e-investimento. La banda grigia e l'intervallo stressato mostrano quanto è solido il confine.",
+    pitfall:
+      "È un confine, non un obiettivo: aprire al tuo prezzo di riserva non ti lascia margine.",
+  },
+  zopa: {
+    title: "Finestra negoziale (ZOPA)",
+    what: "La sovrapposizione tra i prezzi plausibili per il venditore (dal richiesto fino allo sconto tipico) e i prezzi accettabili per te (fino al tuo prezzo di riserva).",
+    why: "Se il tuo confine cade dentro l'intervallo plausibile, una trattativa normale può chiudere l'affare; se cade sotto, serve uno sconto atipico.",
+    pitfall:
+      "L'app non può conoscere il vero minimo del venditore: la finestra usa àncore di mercato osservabili, non il suo prezzo di riserva privato.",
+  },
+  concessions: {
+    title: "Concessioni (equivalenti in prezzo)",
+    what: "Variabili non di prezzo tradotte in euro per te: ingresso anticipato = mesi di affitto che smetti di pagare; arredi inclusi = quanto spenderesti altrimenti; sanatoria a tuo carico = il suo costo preventivato.",
+    why: "Le trattative bloccate sul solo prezzo dividono la torta; dare un prezzo a ciò che ricevi o concedi mostra quanto margine crea uno scambio. Ricevere valore alza il tuo prezzo accettabile, concederlo lo abbassa.",
+    pitfall:
+      "Sono valori per TE. Per il venditore valgono diversamente — ed è proprio quell'asimmetria a rendere possibili gli scambi.",
+  },
+  offerLog: {
+    title: "Registro delle offerte",
+    what: "Offerte e controproposte registrate nel diario con data, parte e prezzo; ciascuna viene rivalutata dal motore a quel prezzo.",
+    why: "Risponde a “ogni passo era difendibile?” e tiene la storia della trattativa accanto alla decisione e alle sue revisioni.",
   },
 };
 

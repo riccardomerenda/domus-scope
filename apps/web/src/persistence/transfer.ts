@@ -30,9 +30,26 @@ const quickDataSchema = z.object({
   emergencyFund: z.number().min(0),
 });
 
+const concessionSchema = z.object({
+  id: z.string().min(1),
+  kind: z.enum(["earlyPossession", "furniture", "remediation", "custom"]),
+  direction: z.enum(["youReceive", "youGive"]),
+  amount: z.number().min(0),
+  label: z.string(),
+});
+
+// Absent in pre-Phase-8 exports; negotiationOf() supplies the defaults.
+const negotiationDataSchema = z.object({
+  askingPrice: z.number().positive().nullable(),
+  typicalDiscount: z.number().min(0).max(0.5),
+  concessions: z.array(concessionSchema),
+});
+
 const analyticalDataSchema = z.object({
   property: z.object({
     price: z.number().positive(),
+    // Optional: pre-Phase-8 exports lack it.
+    marketValue: z.number().positive().nullable().optional(),
     cadastralValue: z.number().min(0).nullable(),
     zone: z.string(),
     sizeSqm: z.number().positive().nullable(),
@@ -52,6 +69,7 @@ const analyticalDataSchema = z.object({
   horizonYears: z.number().int().min(1).max(50),
   sellingCostRate: z.number().min(0).max(0.2),
   profileEnabled: z.boolean(),
+  negotiation: negotiationDataSchema.optional(),
 });
 
 const qualitativeScoresSchema = z.object({
@@ -129,10 +147,15 @@ const journalEntrySchema = z.object({
   id: z.string().min(1),
   scenarioId: z.string().min(1),
   createdAt: z.number(),
-  kind: z.enum(["note", "visit", "pro", "con", "decision"]),
+  kind: z.enum(["note", "visit", "pro", "con", "decision", "offer"]),
   text: z.string(),
   decision: z.string().nullable(),
   revisionId: z.string().nullable(),
+  // Offer entries only (FR-024); absent in pre-Phase-8 exports.
+  offer: z
+    .object({ party: z.enum(["you", "counterpart"]), price: z.number().positive() })
+    .nullable()
+    .optional(),
 });
 
 const revisionSchema = z.object({

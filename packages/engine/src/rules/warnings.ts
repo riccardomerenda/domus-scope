@@ -4,7 +4,7 @@
  */
 
 export type WarningId =
-  "W-001" | "W-002" | "W-003" | "W-004" | "W-005" | "W-006" | "W-007" | "W-008" | "W-009";
+  "W-001" | "W-002" | "W-003" | "W-004" | "W-005" | "W-006" | "W-007" | "W-008" | "W-009" | "W-010";
 
 export type WarningSeverity = "info" | "caution" | "strong";
 
@@ -105,6 +105,27 @@ export function horizonBeyondPayoffWarning(
     message:
       "The horizon extends beyond the mortgage payoff: later years have no payment, only ownership costs.",
     context: { horizonYears, durationYears },
+  };
+}
+
+/** W-010 (FR-022): the defensible price sits below the typical negotiated discount. */
+export function noNegotiationWindowWarning(
+  askingPrice: number,
+  reservationPrice: number | null,
+  requiredDiscount: number | null,
+  typicalDiscount: number,
+): EngineWarning {
+  return {
+    id: "W-010",
+    severity: "caution",
+    message:
+      "Under your assumptions, the price you can defend is below what a typical negotiation achieves from this asking price.",
+    context: {
+      askingPrice,
+      reservationPrice: reservationPrice ?? "none in range",
+      requiredDiscount: requiredDiscount ?? "n/a",
+      typicalDiscount,
+    },
   };
 }
 

@@ -2,6 +2,7 @@ import { assumptionPresets } from "@domus-scope/engine";
 import {
   db,
   defaultAppConfig,
+  defaultNegotiationData,
   type AnalyticalData,
   type QuickData,
   type ScenarioMode,
@@ -30,6 +31,7 @@ export function quickToAnalytical(quick: QuickData): AnalyticalData {
   return {
     property: {
       price: quick.propertyPrice,
+      marketValue: null,
       cadastralValue: null,
       zone: "",
       sizeSqm: null,
@@ -49,6 +51,7 @@ export function quickToAnalytical(quick: QuickData): AnalyticalData {
     horizonYears: quick.horizonYears,
     sellingCostRate: 0.0366,
     profileEnabled: true,
+    negotiation: { ...defaultNegotiationData },
   };
 }
 

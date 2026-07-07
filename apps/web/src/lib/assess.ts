@@ -78,6 +78,9 @@ export function runSimulation(
       price: data.property.price,
       zone: data.property.zone,
       notes: data.property.notes,
+      ...(data.property.marketValue != null && data.property.marketValue > 0
+        ? { marketValue: data.property.marketValue }
+        : {}),
       ...(data.property.cadastralValue !== null
         ? { cadastralValue: data.property.cadastralValue }
         : {}),

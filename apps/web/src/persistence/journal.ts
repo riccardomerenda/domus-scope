@@ -3,6 +3,7 @@ import {
   type AnalyticalData,
   type JournalEntry,
   type JournalKind,
+  type OfferData,
   type QuickData,
   type ScenarioMode,
   type ScenarioRevision,
@@ -42,7 +43,7 @@ export async function saveRevision(
 
 export async function addJournalEntry(
   scenarioId: string,
-  kind: Exclude<JournalKind, "decision">,
+  kind: Exclude<JournalKind, "decision" | "offer">,
   text: string,
 ): Promise<void> {
   await db.journal.add({
@@ -53,6 +54,24 @@ export async function addJournalEntry(
     text: text.trim(),
     decision: null,
     revisionId: null,
+  });
+}
+
+/** Offer log (FR-024): the price is data, the note is memory. */
+export async function addOfferEntry(
+  scenarioId: string,
+  offer: OfferData,
+  note: string,
+): Promise<void> {
+  await db.journal.add({
+    id: crypto.randomUUID(),
+    scenarioId,
+    createdAt: Date.now(),
+    kind: "offer",
+    text: note.trim(),
+    decision: null,
+    revisionId: null,
+    offer,
   });
 }
 

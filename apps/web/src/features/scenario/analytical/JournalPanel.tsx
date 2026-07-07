@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
+import { scenarioAtPrice, simulate } from "@domus-scope/engine";
 import {
   db,
   QUALITATIVE_FACTORS,
@@ -8,23 +9,32 @@ import {
   type AppConfig,
   type JournalEntry,
   type JournalKind,
+  type OfferParty,
   type ScenarioRevision,
   type StoredScenario,
 } from "../../../persistence/db";
 import { updateScenario } from "../../../persistence/scenarios";
 import {
   addJournalEntry,
+  addOfferEntry,
   deleteJournalEntry,
   deleteRevision,
   recordDecision,
   saveRevision,
 } from "../../../persistence/journal";
-import { runSimulation, type SimulationOutcome } from "../../../lib/assess";
+import { engineConfigFor, runSimulation, type SimulationOutcome } from "../../../lib/assess";
 import { preferenceIndex } from "../../../lib/qualitative";
 import { diffObjects } from "../../../lib/diff";
-import { formatDate, formatEURSigned, formatNumber } from "../../../lib/format";
+import { formatDate, formatEUR, formatEURSigned, formatNumber } from "../../../lib/format";
 import { useLocale } from "../../../i18n";
-import { Button, Card, LensTag, SelectField, VerdictChip } from "../../../components/ui";
+import {
+  Button,
+  Card,
+  LensTag,
+  NumberField,
+  SelectField,
+  VerdictChip,
+} from "../../../components/ui";
 import { InfoDot } from "../../../components/InfoDot";
 import { TrashIcon } from "../../../components/Icons";
 
@@ -44,7 +54,9 @@ function formatDiffValue(value: unknown): string {
   }
 }
 
-const KIND_STYLE: Record<Exclude<JournalKind, "decision">, string> = {
+type FreeKind = Exclude<JournalKind, "decision" | "offer">;
+
+const KIND_STYLE: Record<FreeKind, string> = {
   note: "border-hairline text-ink-3",
   visit: "border-rent/40 text-rent",
   pro: "border-good/40 text-good",
@@ -86,6 +98,12 @@ export function JournalPanel({
         entries={entries ?? []}
         outcome={outcome}
         onDecide={(decision, reason) => void recordDecision(revisionSource, decision, reason)}
+      />
+      <OffersCard
+        scenarioId={scenario.id}
+        entries={entries ?? []}
+        outcome={outcome}
+        appConfig={appConfig}
       />
       <EntriesCard scenarioId={scenario.id} entries={entries ?? []} />
       <HistoryCard
@@ -243,11 +261,136 @@ function DecisionCard({
   );
 }
 
+/** Offer log (FR-024): every offered price re-runs the engine, value-anchored. */
+function OffersCard({
+  scenarioId,
+  entries,
+  outcome,
+  appConfig,
+}: {
+  scenarioId: string;
+  entries: JournalEntry[];
+  outcome: SimulationOutcome;
+  appConfig: AppConfig;
+}) {
+  const { t } = useLocale();
+  const [party, setParty] = useState<OfferParty>("counterpart");
+  const [price, setPrice] = useState(Number.NaN);
+  const [note, setNote] = useState("");
+  const offers = entries.filter((entry) => entry.kind === "offer");
+
+  const config = useMemo(() => engineConfigFor(appConfig), [appConfig]);
+  const verdicts = useMemo(() => {
+    if (!outcome.input) return new Map<string, ReturnType<typeof simulate>>();
+    const input = outcome.input;
+    return new Map(
+      offers
+        .filter((entry) => entry.offer)
+        .map((entry) => [entry.id, simulate(scenarioAtPrice(input, entry.offer!.price), config)]),
+    );
+  }, [offers, outcome.input, config]);
+
+  const add = () => {
+    if (!Number.isFinite(price) || price <= 0) return;
+    void addOfferEntry(scenarioId, { party, price }, note);
+    setPrice(Number.NaN);
+    setNote("");
+  };
+
+  return (
+    <Card className="p-4">
+      <h3 className="flex items-center gap-1.5 text-sm font-semibold text-ink">
+        {t("journal.offers")}
+        <InfoDot topic="offerLog" />
+      </h3>
+      <p className="mt-0.5 text-xs text-ink-3">{t("journal.offersHint")}</p>
+
+      <div className="mt-3 grid items-end gap-3 sm:grid-cols-[minmax(0,8rem)_minmax(0,10rem)_minmax(0,1fr)_auto]">
+        <SelectField
+          label={t("journal.offerParty")}
+          value={party}
+          onChange={(event) => setParty(event.target.value as OfferParty)}
+        >
+          <option value="you">{t("journal.party.you")}</option>
+          <option value="counterpart">{t("journal.party.counterpart")}</option>
+        </SelectField>
+        <NumberField
+          label={t("journal.offerPrice")}
+          suffix={t("suffix.eur")}
+          value={price}
+          min={0}
+          step={1_000}
+          onChange={setPrice}
+        />
+        <label className="block">
+          <span className="mb-1 block text-xs font-medium text-ink-2">
+            {t("journal.offerNote")}
+          </span>
+          <input
+            value={note}
+            onChange={(event) => setNote(event.target.value)}
+            onKeyDown={(event) => (event.key === "Enter" ? add() : undefined)}
+            placeholder={t("journal.offerNotePlaceholder")}
+            className="w-full rounded-lg border border-hairline bg-surface px-3 py-2 text-sm text-ink focus-visible:outline-2 focus-visible:outline-rent"
+          />
+        </label>
+        <Button variant="primary" onClick={add} disabled={!Number.isFinite(price) || price <= 0}>
+          {t("journal.addOffer")}
+        </Button>
+      </div>
+
+      {offers.length > 0 ? (
+        <ul className="mt-4 space-y-2">
+          {offers.map((entry) => {
+            const result = verdicts.get(entry.id);
+            return (
+              <li key={entry.id} className="flex flex-wrap items-center gap-2 text-sm">
+                <span className="shrink-0 rounded-full border border-hairline px-1.5 py-0.5 text-[10px] font-medium text-ink-3">
+                  {entry.offer?.party === "you"
+                    ? t("journal.party.you")
+                    : t("journal.party.counterpart")}
+                </span>
+                <span className="nums font-medium text-ink">
+                  {entry.offer ? formatEUR(entry.offer.price) : "—"}
+                </span>
+                {result ? (
+                  <>
+                    <VerdictChip kind={result.verdict.kind} />
+                    <span className="nums text-xs text-ink-2">
+                      {formatEURSigned(result.summary.advantageAtHorizon)} @ {result.horizonYears}y
+                    </span>
+                  </>
+                ) : null}
+                {entry.text ? (
+                  <span className="min-w-0 flex-1 text-ink-2">{entry.text}</span>
+                ) : (
+                  <span className="min-w-0 flex-1" />
+                )}
+                <span className="nums shrink-0 text-[11px] text-ink-3">
+                  {formatDate(entry.createdAt)}
+                </span>
+                <Button
+                  variant="danger"
+                  className="-my-1 px-1.5"
+                  aria-label={t("journal.deleteOffer")}
+                  onClick={() => void deleteJournalEntry(entry.id)}
+                >
+                  <TrashIcon width={13} height={13} />
+                </Button>
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
+    </Card>
+  );
+}
+
 function EntriesCard({ scenarioId, entries }: { scenarioId: string; entries: JournalEntry[] }) {
   const { t } = useLocale();
-  const [kind, setKind] = useState<Exclude<JournalKind, "decision">>("note");
+  const [kind, setKind] = useState<FreeKind>("note");
   const [text, setText] = useState("");
-  const visible = entries.filter((entry) => entry.kind !== "decision");
+  const visible = entries.filter((entry) => entry.kind !== "decision" && entry.kind !== "offer");
 
   const add = () => {
     if (text.trim() === "") return;
@@ -264,7 +407,7 @@ function EntriesCard({ scenarioId, entries }: { scenarioId: string; entries: Jou
           <SelectField
             label={t("journal.type")}
             value={kind}
-            onChange={(event) => setKind(event.target.value as Exclude<JournalKind, "decision">)}
+            onChange={(event) => setKind(event.target.value as FreeKind)}
           >
             <option value="note">{t("journal.kind.note")}</option>
             <option value="visit">{t("journal.kind.visit")}</option>
@@ -294,9 +437,9 @@ function EntriesCard({ scenarioId, entries }: { scenarioId: string; entries: Jou
           {visible.map((entry) => (
             <li key={entry.id} className="flex items-start gap-2 text-sm">
               <span
-                className={`mt-0.5 shrink-0 rounded-full border px-1.5 py-0.5 text-[10px] font-medium ${KIND_STYLE[entry.kind as Exclude<JournalKind, "decision">]}`}
+                className={`mt-0.5 shrink-0 rounded-full border px-1.5 py-0.5 text-[10px] font-medium ${KIND_STYLE[entry.kind as FreeKind]}`}
               >
-                {t(`journal.kind.${entry.kind as Exclude<JournalKind, "decision">}`)}
+                {t(`journal.kind.${entry.kind as FreeKind}`)}
               </span>
               <span className="min-w-0 flex-1 text-ink-2">{entry.text}</span>
               <span className="nums shrink-0 text-[11px] text-ink-3">

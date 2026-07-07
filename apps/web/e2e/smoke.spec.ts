@@ -20,6 +20,12 @@ test("full decision journey survives a reload", async ({ page }) => {
   await expect(page.getByText(/Buying leaves you/)).toBeVisible();
   await expect(page.getByTitle(/perturbations that flip the verdict/)).toBeVisible();
 
+  // Negotiation: derived walk-away price and the ZOPA bar for an asking price.
+  await page.getByRole("radio", { name: "Negotiation" }).click();
+  await expect(page.getByText("Walk-away price")).toBeVisible();
+  await page.getByRole("spinbutton", { name: "Asking price" }).fill("260000");
+  await expect(page.getByRole("img", { name: /Price scale/ })).toBeVisible();
+
   // Journal: record the decision.
   await page.getByRole("radio", { name: "Journal" }).click();
   await page.getByLabel("Decision", { exact: true }).fill("Buy it");

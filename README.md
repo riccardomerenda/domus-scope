@@ -86,25 +86,27 @@ domus-scope/
 │                        # rules, sensitivity, explanation traces, presets
 ├── apps/
 │   └── web/             # React SPA (PWA): scenario workspace, results, sensitivity,
-│                        # comparison, decision journal, settings
+│                        # negotiation, comparison, decision journal, settings
 └── docs/                # Source document, planning set, testing guide
 ```
 
 ## Documentation
 
-| Document                                                   | Content                                                                                                              |
-| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| [`docs/00-source-document.md`](docs/00-source-document.md) | The original domain document the project was built from (translated from Italian)                                    |
-| [`docs/01-critique.md`](docs/01-critique.md)               | Critical review of the source domain document: validated strengths, weaknesses, gaps                                 |
-| [`docs/02-domain-spec.md`](docs/02-domain-spec.md)         | Refined domain specification: methodology, corrected formulas, input/output catalogs, validation rules, test vectors |
-| [`docs/03-architecture.md`](docs/03-architecture.md)       | Stack decision, monorepo layout, engine design, configuration system, persistence, testing strategy                  |
-| [`docs/04-ui-design.md`](docs/04-ui-design.md)             | Information architecture, screens, design language, chart set, component inventory                                   |
-| [`docs/05-roadmap.md`](docs/05-roadmap.md)                 | Phased implementation plan with milestones, tasks, and acceptance criteria                                           |
-| [`docs/06-testing-guide.md`](docs/06-testing-guide.md)     | Hands-on guide: setup in three commands + a guided tour of every feature                                             |
+| Document                                                     | Content                                                                                                              |
+| ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| [`docs/00-source-document.md`](docs/00-source-document.md)   | The original domain document the project was built from (translated from Italian)                                    |
+| [`docs/01-critique.md`](docs/01-critique.md)                 | Critical review of the source domain document: validated strengths, weaknesses, gaps                                 |
+| [`docs/02-domain-spec.md`](docs/02-domain-spec.md)           | Refined domain specification: methodology, corrected formulas, input/output catalogs, validation rules, test vectors |
+| [`docs/03-architecture.md`](docs/03-architecture.md)         | Stack decision, monorepo layout, engine design, configuration system, persistence, testing strategy                  |
+| [`docs/04-ui-design.md`](docs/04-ui-design.md)               | Information architecture, screens, design language, chart set, component inventory                                   |
+| [`docs/05-roadmap.md`](docs/05-roadmap.md)                   | Phased implementation plan with milestones, tasks, and acceptance criteria                                           |
+| [`docs/06-testing-guide.md`](docs/06-testing-guide.md)       | Hands-on guide: setup in three commands + a guided tour of every feature                                             |
+| [`docs/07-negotiation-lens.md`](docs/07-negotiation-lens.md) | Negotiation lens (Phase 8): reservation price, ZOPA view, concessions, offer log                                     |
 
 ## Status
 
-**All six roadmap phases complete, plus a localization & guidance pass (Phase 7).**
+**All six roadmap phases complete, plus a localization & guidance pass (Phase 7) and a
+negotiation lens (Phase 8).**
 The blueprint question of the source document (§21)
 — _"given this house, this rent, this mortgage and my liquidity, when does buying beat
 renting, and how fragile is that conclusion?"_ — is answerable end-to-end, printable,
@@ -131,12 +133,23 @@ and remembered:
   Settings (Auto / English / Italiano); **field-level help**: every input carries a ⓘ
   popover explaining what it is, why it matters, typical Italian values, common
   pitfalls, and the _direction_ of its effect on the verdict; and a **Glossary** page
-  (`/help`) collecting the same 33 topics. Numbers and dates stay it-IT in both
+  (`/help`) collecting the same topics. Numbers and dates stay it-IT in both
   languages by design (spec G12).
+- **Phase 8**: the **negotiation lens**
+  ([spec](docs/07-negotiation-lens.md)). The engine separates **market value**
+  from **transaction price**, then derives your **reservation price** — the
+  walk-away boundary where buying stops beating renting-and-investing — with a
+  grey band and a stressed range (never a false point estimate). The **ZOPA
+  view** places it against the asking price and the typical negotiated discount
+  (Banca d'Italia average, editable), warning (W-010) when the discount you
+  need is atypical. A **concession converter** prices non-price variables
+  (early possession, furniture, remediation) so trades become arithmetic, and
+  the journal gains an **offer log** where every offered price is re-evaluated
+  by the engine.
 
-87 unit/component tests green plus a **Playwright smoke** that drives the whole journey
-in a real browser (create → verdict → full analysis → decision → reload → remembered):
-`pnpm --filter @domus-scope/web e2e`.
+112 unit/component tests green plus a **Playwright smoke** that drives the whole journey
+in a real browser (create → verdict → full analysis → negotiation → decision → reload →
+remembered): `pnpm --filter @domus-scope/web e2e`.
 
 Run it: `pnpm --filter @domus-scope/web dev` → http://localhost:5173
 

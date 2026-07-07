@@ -69,6 +69,15 @@ export function PropertySection({ data, onChange }: SectionProps) {
           onChange={(v) => set({ price: v })}
         />
         <NumberField
+          label={t("inputs.marketValue")}
+          suffix={t("suffix.eur")}
+          value={data.property.marketValue ?? Number.NaN}
+          min={0}
+          step={1_000}
+          help="marketValue"
+          onChange={(v) => set({ marketValue: Number.isFinite(v) && v > 0 ? v : null })}
+        />
+        <NumberField
           label={t("inputs.cadastral")}
           suffix={t("suffix.eur")}
           value={data.property.cadastralValue ?? Number.NaN}
