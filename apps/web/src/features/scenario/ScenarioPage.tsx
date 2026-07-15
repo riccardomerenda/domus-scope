@@ -96,6 +96,13 @@ function QuickEditor({ scenario }: { scenario: StoredScenario }) {
   const assessment = useMemo(() => assessQuickData(quick), [quick]);
   useDebouncedSave(() => void updateScenario(scenario.id, { quick }), [quick, scenario.id]);
 
+  // Persist the local edits first: setMode reads the scenario from the DB, and
+  // a debounced save still in flight would make it seed from stale quick data.
+  async function deepen() {
+    await updateScenario(scenario.id, { quick });
+    await setMode(scenario.id, "analytical");
+  }
+
   return (
     <div>
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]">
@@ -103,7 +110,7 @@ function QuickEditor({ scenario }: { scenario: StoredScenario }) {
         <div>
           <QuickResultsPanel assessment={assessment} />
           <div className="mt-4 flex justify-end">
-            <Button variant="primary" onClick={() => void setMode(scenario.id, "analytical")}>
+            <Button variant="primary" onClick={() => void deepen()}>
               {t("scenario.deepen")} <ArrowRightIcon />
             </Button>
           </div>
@@ -127,6 +134,12 @@ function AnalyticalWorkspace({ scenario }: { scenario: StoredScenario }) {
     () => void updateScenario(scenario.id, { analytical: data }),
     [data, scenario.id],
   );
+
+  // Same stale-read guard as deepen(): flush the form before switching mode.
+  async function toQuickView() {
+    await updateScenario(scenario.id, { analytical: data });
+    await setMode(scenario.id, "quick");
+  }
 
   const appConfig = mergeAppConfig(storedConfig);
   const config = useMemo(() => engineConfigFor(appConfig), [appConfig]);
@@ -165,9 +178,7 @@ function AnalyticalWorkspace({ scenario }: { scenario: StoredScenario }) {
           >
             {t("scenario.report")}
           </Link>
-          <Button onClick={() => void setMode(scenario.id, "quick")}>
-            {t("scenario.quickView")}
-          </Button>
+          <Button onClick={() => void toQuickView()}>{t("scenario.quickView")}</Button>
         </div>
       </div>
 

@@ -28,11 +28,12 @@ export function DashboardPage() {
   const { t } = useLocale();
   const [showArchived, setShowArchived] = useState(false);
   const scenarios = useLiveQuery(() => db.scenarios.orderBy("updatedAt").reverse().toArray(), []);
-  const appConfig =
-    useLiveQuery(async () => mergeAppConfig(await db.appConfig.get("app")), []) ??
-    mergeAppConfig(null);
+  // undefined = loading: card figures computed with the default profile would
+  // flash wrong values before the stored config arrives.
+  const storedConfig = useLiveQuery(async () => (await db.appConfig.get("app")) ?? null, []);
+  const appConfig = mergeAppConfig(storedConfig);
 
-  if (!scenarios) return null;
+  if (!scenarios || storedConfig === undefined) return null;
   const visible = scenarios.filter((scenario) => scenario.archived === showArchived);
   const archivedCount = scenarios.filter((scenario) => scenario.archived).length;
 

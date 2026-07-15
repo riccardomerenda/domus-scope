@@ -85,6 +85,22 @@ describe("analytical mode (Phase 4 exit criteria — flow 11.2)", () => {
     expect(screen.getByText("Buyer agency fee")).toBeInTheDocument();
   });
 
+  it("deepening right after a quick edit keeps the edit and seeds the profile", async () => {
+    const scenario = await createScenario("Race test");
+    const user = userEvent.setup();
+    renderScenario(scenario.id);
+
+    // Click "Deepen" within the 300ms save debounce: setMode must still see
+    // the fresh quick data (liquidity check on) and seed the global profile.
+    await user.click(await screen.findByRole("checkbox", { name: /Check my liquidity/ }));
+    await user.click(screen.getByRole("button", { name: /Deepen with full analysis/ }));
+    await screen.findByText("Property");
+
+    const stored = await db.scenarios.get(scenario.id);
+    expect(stored?.quick.liquidityEnabled).toBe(true);
+    expect((await db.appConfig.get("app"))?.profile.liquidity).toBe(80_000);
+  });
+
   it("injects the global profile so liquidity warnings surface in the banner (FR-015)", async () => {
     const scenario = await createScenario("Liquidity test");
     await setMode(scenario.id, "analytical");

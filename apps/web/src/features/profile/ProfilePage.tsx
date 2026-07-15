@@ -33,7 +33,9 @@ const ASSUMPTION_KEYS: (keyof EconomicAssumptions & HelpTopicId)[] = [
 
 export function ProfilePage() {
   const { t } = useLocale();
-  const stored = useLiveQuery(() => db.appConfig.get("app"), []);
+  // undefined = loading; null = nothing stored yet (render the defaults —
+  // the first edit creates the record via updateAppConfig).
+  const stored = useLiveQuery(async () => (await db.appConfig.get("app")) ?? null, []);
   if (stored === undefined) return null;
   const config = mergeAppConfig(stored);
   return (

@@ -322,7 +322,12 @@ export async function importData(raw: unknown): Promise<ImportOutcome> {
   return { imported: file.scenarios.length, renamed, configImported };
 }
 
-/** Single-scenario export (US-013), including its journal and revisions. */
+/**
+ * Single-scenario export (US-013), including its journal and revisions. The
+ * current app config travels along: profile-enabled scenarios and global
+ * assumption overrides are not reproducible without it, and import only
+ * applies it on devices that have none.
+ */
 export async function buildScenarioExport(scenarioId: string): Promise<ExportFile | null> {
   const scenario = await db.scenarios.get(scenarioId);
   if (!scenario) return null;
@@ -331,7 +336,7 @@ export async function buildScenarioExport(scenarioId: string): Promise<ExportFil
     schemaVersion: 3,
     exportedAt: Date.now(),
     scenarios: [scenario],
-    appConfig: null,
+    appConfig: (await db.appConfig.get("app")) ?? null,
     journal: await db.journal.where("scenarioId").equals(scenarioId).toArray(),
     revisions: await db.revisions.where("scenarioId").equals(scenarioId).toArray(),
   };

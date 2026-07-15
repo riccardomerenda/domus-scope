@@ -29,9 +29,10 @@ export function ReportPage() {
     async () => (id ? ((await db.scenarios.get(id)) ?? null) : null),
     [id],
   );
-  const appConfig =
-    useLiveQuery(async () => mergeAppConfig(await db.appConfig.get("app")), []) ??
-    mergeAppConfig(null);
+  // undefined = loading (render nothing below): computing with the default
+  // profile would flash wrong figures before the stored config arrives.
+  const storedConfig = useLiveQuery(async () => (await db.appConfig.get("app")) ?? null, []);
+  const appConfig = mergeAppConfig(storedConfig);
   const journal = useLiveQuery(
     () => (id ? db.journal.where("scenarioId").equals(id).sortBy("createdAt") : []),
     [id],
@@ -54,7 +55,7 @@ export function ReportPage() {
     [scenario, appConfig],
   );
 
-  if (scenario === undefined) return null;
+  if (scenario === undefined || storedConfig === undefined) return null;
   if (!scenario) {
     return (
       <div className="py-16 text-center text-sm text-ink-2">

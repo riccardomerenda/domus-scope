@@ -31,9 +31,10 @@ interface ComparedScenario {
 export function ComparePage() {
   const { t } = useLocale();
   const scenarios = useLiveQuery(() => db.scenarios.orderBy("updatedAt").reverse().toArray(), []);
-  const appConfig =
-    useLiveQuery(async () => mergeAppConfig(await db.appConfig.get("app")), []) ??
-    mergeAppConfig(null);
+  // undefined = loading: comparisons computed with the default profile would
+  // flash wrong values before the stored config arrives.
+  const storedConfig = useLiveQuery(async () => (await db.appConfig.get("app")) ?? null, []);
+  const appConfig = mergeAppConfig(storedConfig);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const compared = useMemo<ComparedScenario[]>(() => {
@@ -52,7 +53,7 @@ export function ComparePage() {
       }));
   }, [scenarios, selectedIds, appConfig]);
 
-  if (!scenarios) return null;
+  if (!scenarios || storedConfig === undefined) return null;
   const candidates = scenarios.filter((scenario) => !scenario.archived);
 
   const toggle = (id: string, checked: boolean) =>
