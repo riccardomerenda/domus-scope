@@ -4,6 +4,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { type EconomicAssumptions } from "@domus-scope/engine";
 import { db, mergeAppConfig } from "../../persistence/db";
 import { buildScenarioExport } from "../../persistence/transfer";
+import { downloadJson } from "../../lib/download";
 import { runSimulation } from "../../lib/assess";
 import { preferenceIndex } from "../../lib/qualitative";
 import {
@@ -89,13 +90,7 @@ export function ReportPage() {
   async function onExportJson() {
     const file = await buildScenarioExport(scenario!.id);
     if (!file) return;
-    const blob = new Blob([JSON.stringify(file, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = `domus-scope-${scenario!.title.toLowerCase().replaceAll(/\s+/g, "-")}.json`;
-    anchor.click();
-    URL.revokeObjectURL(url);
+    downloadJson(`domus-scope-${scenario!.title.toLowerCase().replaceAll(/\s+/g, "-")}.json`, file);
   }
 
   return (

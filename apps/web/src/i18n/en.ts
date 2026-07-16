@@ -12,6 +12,16 @@ export const en = {
   "shell.localFirst": "Local-first: your data never leaves this device.",
   "shell.themeToLight": "Light theme",
   "shell.themeToDark": "Dark theme",
+  "notFound.title": "Page not found",
+  "notFound.body":
+    "This address doesn't match anything — the scenario may have been deleted, or the link is wrong.",
+  "notFound.home": "Back to dashboard",
+  "crash.title": "Something went wrong",
+  "crash.body":
+    "The app hit an unexpected error. Your data is safe in this browser — you can export a backup right now, then reload.",
+  "crash.reload": "Reload the app",
+  "crash.export": "Export all data",
+  "crash.details": "Technical details",
 
   /* ---------- common ---------- */
   "common.cancel": "Cancel",
@@ -382,6 +392,7 @@ export const en = {
   "yearTable.wealthBuy": "Wealth buy",
   "yearTable.advantage": "Advantage",
   "yearTable.expandAria": "Toggle year {n} breakdown",
+  "yearTable.expandColumn": "Expand rows",
   "yearTable.rentYear": "Rent — year {n}",
   "yearTable.buyYear": "Buy — year {n}",
 
@@ -616,6 +627,10 @@ export const en = {
   "settings.wipeBody":
     "Every scenario on this device will be permanently removed. Export a backup first if in doubt.",
   "settings.wipeConfirm": "Delete everything",
+  "settings.storagePersistent":
+    "Storage is persistent: the browser will not evict this data under storage pressure.",
+  "settings.storageBestEffort":
+    "Storage is best-effort: the browser may evict local data under storage pressure — export a backup regularly.",
 
   /* ---------- report ---------- */
   "report.kicker": "DomusScope — decision report",

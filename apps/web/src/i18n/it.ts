@@ -8,6 +8,16 @@ export const it: Record<MessageKey, string> = {
   "nav.profile": "Profilo e assunzioni",
   "nav.settings": "Impostazioni",
   "nav.help": "Glossario",
+  "notFound.title": "Pagina non trovata",
+  "notFound.body":
+    "Questo indirizzo non corrisponde a nulla — lo scenario potrebbe essere stato eliminato, o il link è errato.",
+  "notFound.home": "Torna alla dashboard",
+  "crash.title": "Qualcosa è andato storto",
+  "crash.body":
+    "L'app ha incontrato un errore imprevisto. I tuoi dati sono al sicuro in questo browser — puoi esportare subito un backup e poi ricaricare.",
+  "crash.reload": "Ricarica l'app",
+  "crash.export": "Esporta tutti i dati",
+  "crash.details": "Dettagli tecnici",
   "shell.localFirst": "Local-first: i tuoi dati non lasciano mai questo dispositivo.",
   "shell.themeToLight": "Tema chiaro",
   "shell.themeToDark": "Tema scuro",
@@ -385,6 +395,7 @@ export const it: Record<MessageKey, string> = {
   "yearTable.wealthBuy": "Patrim. acquisto",
   "yearTable.advantage": "Vantaggio",
   "yearTable.expandAria": "Mostra/nascondi dettaglio anno {n}",
+  "yearTable.expandColumn": "Espandi righe",
   "yearTable.rentYear": "Affitto — anno {n}",
   "yearTable.buyYear": "Acquisto — anno {n}",
 
@@ -622,6 +633,10 @@ export const it: Record<MessageKey, string> = {
   "settings.wipeBody":
     "Ogni scenario su questo dispositivo sarà rimosso definitivamente. Nel dubbio, esporta prima un backup.",
   "settings.wipeConfirm": "Elimina tutto",
+  "settings.storagePersistent":
+    "Archiviazione persistente: il browser non eliminerà questi dati per mancanza di spazio.",
+  "settings.storageBestEffort":
+    "Archiviazione best-effort: il browser potrebbe eliminare i dati locali per mancanza di spazio — esporta un backup regolarmente.",
 
   /* ---------- report ---------- */
   "report.kicker": "DomusScope — report decisionale",

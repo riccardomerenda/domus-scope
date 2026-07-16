@@ -1,4 +1,4 @@
-import { useEffect, useRef, type DependencyList } from "react";
+import { useEffect, useRef, useState, type DependencyList } from "react";
 
 /**
  * Debounced write-through: runs `save` `delay` ms after the deps settle,
@@ -32,4 +32,25 @@ export function useDebouncedSave(save: () => void, deps: DependencyList, delay =
     },
     [],
   );
+}
+
+/**
+ * Whether IndexedDB is exempt from storage-pressure eviction (requested at
+ * startup in main.tsx). `null` while resolving or when the API is missing.
+ */
+export function useStoragePersistence(): boolean | null {
+  const [persisted, setPersisted] = useState<boolean | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    void navigator.storage
+      ?.persisted?.()
+      .then((value) => {
+        if (!cancelled) setPersisted(value);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return persisted;
 }

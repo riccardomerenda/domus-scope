@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { en, type MessageKey } from "./en";
 import { it } from "./it";
 
@@ -53,6 +61,12 @@ const LocaleContext = createContext<LocaleContextValue>({
 export function LocaleProvider({ children }: { children: ReactNode }) {
   const [preference, setPreferenceState] = useState<LocalePreference>(readPreference);
   const locale: Locale = preference === "auto" ? detectLocale() : preference;
+
+  // Keep assistive-tech pronunciation in sync with the UI language
+  // (index.html ships lang="en").
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
 
   const setPreference = useCallback((next: LocalePreference) => {
     setPreferenceState(next);

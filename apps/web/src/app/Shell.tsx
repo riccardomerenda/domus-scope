@@ -78,20 +78,21 @@ export function Shell() {
       <div className="min-w-0 flex-1">
         <header className="flex items-center justify-between border-b border-hairline bg-surface px-4 py-3 md:hidden">
           <Wordmark />
+          {/* Icon-only links: the label must live in aria-label. */}
           <nav className="flex items-center gap-1">
-            <NavLink to="/" end className={navClass}>
+            <NavLink to="/" end className={navClass} aria-label={t("nav.dashboard")}>
               <HomeIcon />
             </NavLink>
-            <NavLink to="/compare" className={navClass}>
+            <NavLink to="/compare" className={navClass} aria-label={t("nav.compare")}>
               <CompareIcon />
             </NavLink>
-            <NavLink to="/profile" className={navClass}>
+            <NavLink to="/profile" className={navClass} aria-label={t("nav.profile")}>
               <SlidersIcon />
             </NavLink>
-            <NavLink to="/help" className={navClass}>
+            <NavLink to="/help" className={navClass} aria-label={t("nav.help")}>
               <InfoIcon />
             </NavLink>
-            <NavLink to="/settings" className={navClass}>
+            <NavLink to="/settings" className={navClass} aria-label={t("nav.settings")}>
               <SettingsIcon />
             </NavLink>
           </nav>

@@ -9,6 +9,8 @@ import {
 } from "../../persistence/transfer";
 import { useTheme, type ThemePreference } from "../../app/theme";
 import { useLocale, type LocalePreference } from "../../i18n";
+import { useStoragePersistence } from "../../lib/hooks";
+import { downloadJson, exportFilename } from "../../lib/download";
 
 export function SettingsPage() {
   const { t, preference: localePreference, setPreference: setLocalePreference } = useLocale();
@@ -16,16 +18,10 @@ export function SettingsPage() {
   const fileInput = useRef<HTMLInputElement>(null);
   const [importOutcome, setImportOutcome] = useState<ImportOutcome | null>(null);
   const [confirmWipe, setConfirmWipe] = useState(false);
+  const persisted = useStoragePersistence();
 
   async function onExport() {
-    const data = await buildExport();
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = `domus-scope-export-${new Date().toISOString().slice(0, 10)}.json`;
-    anchor.click();
-    URL.revokeObjectURL(url);
+    downloadJson(exportFilename(), await buildExport());
   }
 
   async function onImportFile(file: File) {
@@ -74,6 +70,11 @@ export function SettingsPage() {
       <Card className="p-4">
         <h2 className="text-sm font-semibold text-ink">{t("settings.data")}</h2>
         <p className="mt-1 text-sm leading-relaxed text-ink-2">{t("settings.dataBody")}</p>
+        {persisted !== null ? (
+          <p className="mt-2 text-xs leading-relaxed text-ink-3">
+            {persisted ? t("settings.storagePersistent") : t("settings.storageBestEffort")}
+          </p>
+        ) : null}
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <Button variant="primary" onClick={() => void onExport()}>
             <DownloadIcon /> {t("settings.export")}

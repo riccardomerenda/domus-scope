@@ -60,7 +60,7 @@ export function YearTable({
         <table className="w-full min-w-[52rem] text-sm">
           <thead>
             <tr className="border-b border-baseline text-left text-[11px] tracking-wide text-ink-3 uppercase">
-              <th className="py-1.5 pr-2 font-medium" aria-label="Expand" />
+              <th className="py-1.5 pr-2 font-medium" aria-label={t("yearTable.expandColumn")} />
               <th className="py-1.5 pr-3 font-medium">{t("yearTable.year")}</th>
               {headers.map((header) => (
                 <th key={header} className="py-1.5 pr-3 text-right font-medium">
