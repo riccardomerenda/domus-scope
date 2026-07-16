@@ -109,8 +109,8 @@ domus-scope/
 
 **All six roadmap phases complete, plus a localization & guidance pass (Phase 7), a
 negotiation lens (Phase 8), a reliability pass (Phase 9), variable-rate mortgages
-with partial early repayments (Phase 10), and the Italian taxes that move the
-verdict (Phase 11).**
+with partial early repayments (Phase 10), the Italian taxes that move the
+verdict (Phase 11), and a quality pass (Phase 12).**
 The blueprint question of the source document (§21)
 — _"given this house, this rent, this mortgage and my liquidity, when does buying beat
 renting, and how fragile is that conclusion?"_ — is answerable end-to-end, printable,
@@ -171,10 +171,17 @@ and remembered:
   `percentOfCadastral` cost kind). One-time works flagged in the cost
   catalog earn the **detrazione ristrutturazione** (50% of the capped spend
   over 10 years), symmetric with the interest deduction.
+- **Phase 12**: quality pass. Full a11y round (skip-to-content link, live
+  verdict regions, `prefers-reduced-motion` for CSS *and* chart animations);
+  **route-level code splitting** — Recharts and the analytical workspace load
+  on demand, cutting the initial bundle by ~40%; PNG + maskable **PWA
+  icons**; engine dead-code removal (unread toggles, orphan formulas) with
+  the numeric-tolerance policy unified and documented; test-gap closure
+  (cost-resolver semantics, all three purchase-tax regimes, hold basis).
 
-167 unit/component tests green plus a **Playwright smoke** that drives the whole journey
-in a real browser (create → verdict → full analysis → negotiation → decision → reload →
-remembered): `pnpm --filter @domus-scope/web e2e`.
+178 unit/component tests green plus a **Playwright smoke** that drives the whole journey
+in a real browser **on desktop and phone viewports** (create → verdict → full analysis →
+negotiation → decision → reload → remembered): `pnpm --filter @domus-scope/web e2e`.
 
 Run it: `pnpm --filter @domus-scope/web dev` → http://localhost:5173
 

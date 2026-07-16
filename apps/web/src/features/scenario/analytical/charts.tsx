@@ -14,6 +14,7 @@ import {
   YAxis,
 } from "recharts";
 import { formatEUR } from "../../../lib/format";
+import { seriesMotion } from "../../../lib/motion";
 import { useLocale } from "../../../i18n";
 import { Card, LensTag } from "../../../components/ui";
 
@@ -106,6 +107,7 @@ export function RentVsBuyLines({ rows }: { rows: TwoSeriesRow[] }) {
           stroke="var(--ds-rent)"
           strokeWidth={2}
           dot={false}
+          {...seriesMotion()}
         />
         <Line
           name={t("results.series.buy")}
@@ -113,6 +115,7 @@ export function RentVsBuyLines({ rows }: { rows: TwoSeriesRow[] }) {
           stroke="var(--ds-buy)"
           strokeWidth={2}
           dot={false}
+          {...seriesMotion()}
         />
       </LineChart>
     </ResponsiveContainer>
@@ -144,7 +147,12 @@ export function AdvantageBars({ rows }: { rows: { year: number; advantage: numbe
           labelFormatter={(year) => t("results.tooltip.sellAt", { n: String(year) })}
         />
         <ReferenceLine y={0} stroke="var(--ds-baseline)" />
-        <Bar name={t("results.series.advantage")} dataKey="advantage" radius={[3, 3, 0, 0]}>
+        <Bar
+          name={t("results.series.advantage")}
+          dataKey="advantage"
+          radius={[3, 3, 0, 0]}
+          {...seriesMotion()}
+        >
           {rows.map((row) => (
             <Cell key={row.year} fill={row.advantage >= 0 ? "var(--ds-buy)" : "var(--ds-rent)"} />
           ))}
@@ -188,6 +196,7 @@ export function MortgageAnatomyBars({
           dataKey="interest"
           stackId="payment"
           fill="var(--ds-seq-1)"
+          {...seriesMotion()}
         />
         <Bar
           name={t("results.series.principal")}
@@ -195,6 +204,7 @@ export function MortgageAnatomyBars({
           stackId="payment"
           fill="var(--ds-seq-3)"
           radius={[3, 3, 0, 0]}
+          {...seriesMotion()}
         />
       </BarChart>
     </ResponsiveContainer>
@@ -241,30 +251,35 @@ export function CostCompositionBars({ rows }: { rows: CompositionRow[] }) {
           dataKey="interest"
           stackId="cost"
           fill="var(--ds-seq-1)"
+          {...seriesMotion()}
         />
         <Bar
           name={t("results.series.upkeep")}
           dataKey="upkeep"
           stackId="cost"
           fill="var(--ds-seq-2)"
+          {...seriesMotion()}
         />
         <Bar
           name={t("results.series.items")}
           dataKey="items"
           stackId="cost"
           fill="var(--ds-seq-3)"
+          {...seriesMotion()}
         />
         <Bar
           name={t("results.series.opportunity")}
           dataKey="opportunity"
           stackId="cost"
           fill="var(--ds-seq-4)"
+          {...seriesMotion()}
         />
         <Bar
           name={t("results.series.credits")}
           dataKey="credits"
           stackId="cost"
           fill="var(--ds-buy)"
+          {...seriesMotion()}
         />
       </BarChart>
     </ResponsiveContainer>

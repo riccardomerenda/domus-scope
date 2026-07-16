@@ -63,7 +63,8 @@ function Results({ result }: { result: QuickResult }) {
     <div className="space-y-4">
       {/* Verdict banner */}
       <Card className="p-4">
-        <div className="flex flex-wrap items-center gap-3">
+        {/* Live region: the provisional verdict recomputes on every edit. */}
+        <div role="status" className="flex flex-wrap items-center gap-3">
           <VerdictChip
             kind={result.verdict.kind}
             indicative={result.verdict.strength === "indicative"}

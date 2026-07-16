@@ -3,14 +3,14 @@ import { economicAssumptionsSchema, type EconomicAssumptions } from "./assumptio
 import { fraction, money } from "./common";
 
 export const featureTogglesSchema = z.object({
-  /** BR-011: disabling the opportunity-cost line always raises W-006. */
+  /**
+   * BR-011: disabling the opportunity-cost line always raises W-006. Per
+   * BR-019 the appreciation credit is paired with it — one toggle for both,
+   * so they can never be shown apart.
+   */
   opportunityCost: z.boolean(),
-  /** BR-019: displayed whenever the opportunity cost is displayed. */
-  appreciationCredit: z.boolean(),
   /** G4: 19% of mortgage interest, capped (Italian primary residence). */
   mortgageInterestDeduction: z.boolean(),
-  /** Critique W5: deflate cumulative figures by inflation. */
-  realTermsView: z.boolean(),
   /** Critique W7: include selling costs at each horizon (honest default). */
   liquidationBasis: z.boolean(),
   /** G14: detrazione ristrutturazione on flagged one-time works. */
@@ -107,9 +107,7 @@ export const defaultEngineConfig: EngineConfig = {
   epsilon: 1e-9,
   toggles: {
     opportunityCost: true,
-    appreciationCredit: true,
     mortgageInterestDeduction: true,
-    realTermsView: false,
     liquidationBasis: true,
     renovationDeduction: true,
   },

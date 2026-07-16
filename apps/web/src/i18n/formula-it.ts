@@ -4,15 +4,6 @@
  * to the engine's English description.
  */
 export const formulaDescriptionsIt: Record<string, string> = {
-  "mortgage.payment.french":
-    "Ammortamento francese (rata costante): P = capitale, i = tasso mensile, n = numero di rate mensili.",
-  "mortgage.payment.zeroRate":
-    "Mutuo a tasso zero: il capitale si rimborsa linearmente, senza interessi.",
-  "mortgage.interest.month":
-    "Gli interessi mensili maturano sul debito residuo iniziale al tasso mensile.",
-  "mortgage.principal.month":
-    "La parte della rata che riduce il debito e diventa patrimonio netto.",
-  "quick.rentToPrice": "Affitto annuo equivalente come frazione del prezzo dell'immobile.",
   "quick.threshold.derived":
     "Soglia derivata della regola rapida: manutenzione + imposte ricorrenti + costo del capitale ponderato − rivalutazione attesa. Il classico 5% emerge solo con le assunzioni che lo generano.",
   "quick.rent.year1": "Costo non recuperabile semplificato del primo anno per lo scenario affitto.",

@@ -1,6 +1,6 @@
 import { recoverablePaidThrough, type OneTimeEvent } from "../costs/resolve";
 import { type CostBreakdown, type LineItem } from "../explain/line-item";
-import { normalizeZero } from "../lib/numbers";
+import { MONEY_EPSILON, normalizeZero } from "../lib/numbers";
 import {
   interestDeductionAt,
   propertyGainsTaxAt,
@@ -63,8 +63,6 @@ export interface WealthLensResult {
   buyCompositionAtHorizon: CostBreakdown;
   rentCompositionAtHorizon: CostBreakdown;
 }
-
-const MONEY_EPSILON = 1e-6;
 
 function oneTimeAtMonth(events: OneTimeEvent[], month: number): number {
   return events.reduce((sum, event) => (event.month === month ? sum + event.amount : sum), 0);

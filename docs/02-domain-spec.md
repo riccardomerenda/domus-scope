@@ -306,7 +306,10 @@ warning thresholds, cost-catalog defaults, and formatting are all configuration.
 - Engine: pure functions, no clock, no randomness; same input object → deeply equal
   output (NFR-002, asserted by a determinism test).
 - Arithmetic: IEEE-754 double precision, **no intermediate rounding**.
-- Comparisons (break-evens, verdict boundaries): relative epsilon `1e-9`.
+- Comparisons: absolute tolerances, each matched to its quantity's natural
+  scale — money comparisons (break-evens, zero checks) use `MONEY_EPSILON`
+  (1e-6 €, one shared constant); rate and band comparisons use
+  `config.epsilon` (1e-9, configurable).
 - Presentation only: `Intl.NumberFormat('it-IT', { currency: 'EUR' })`, 0 decimals by
   default (configurable). Percentages: 1 decimal. The engine never formats.
 

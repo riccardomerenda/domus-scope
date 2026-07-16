@@ -47,32 +47,6 @@ export interface FormulaDescriptor {
  * formulas here; the UI renders entries verbatim in explanation drawers.
  */
 export const formulaRegistry: Record<string, FormulaDescriptor> = {
-  "mortgage.payment.french": {
-    id: "mortgage.payment.french",
-    expression: "payment = P · [i · (1+i)^n] / [(1+i)^n − 1]",
-    description:
-      "French (constant-payment) amortization: P = principal, i = monthly rate, n = number of monthly payments.",
-  },
-  "mortgage.payment.zeroRate": {
-    id: "mortgage.payment.zeroRate",
-    expression: "payment = P / n",
-    description: "Zero-rate mortgage: the principal is repaid linearly with no interest.",
-  },
-  "mortgage.interest.month": {
-    id: "mortgage.interest.month",
-    expression: "interest_m = balance_{m−1} · i",
-    description: "Monthly interest accrues on the opening balance at the monthly rate.",
-  },
-  "mortgage.principal.month": {
-    id: "mortgage.principal.month",
-    expression: "principal_m = payment − interest_m",
-    description: "The part of the payment that reduces debt and becomes net worth (BR-008).",
-  },
-  "quick.rentToPrice": {
-    id: "quick.rentToPrice",
-    expression: "R = (monthly_rent × 12) / price",
-    description: "Annual equivalent rent as a fraction of the property price.",
-  },
   "quick.threshold.derived": {
     id: "quick.threshold.derived",
     expression: "R* = m% + tax% + LTV·i + (1 − LTV)·r_alt − g",

@@ -9,6 +9,7 @@ export const en = {
   "nav.profile": "Profile & Assumptions",
   "nav.settings": "Settings",
   "nav.help": "Glossary",
+  "shell.skipToContent": "Skip to content",
   "shell.localFirst": "Local-first: your data never leaves this device.",
   "shell.themeToLight": "Light theme",
   "shell.themeToDark": "Dark theme",

@@ -194,7 +194,8 @@ function Results({
             indicative={result.verdict.strength === "indicative"}
           />
           {fragility ? <FragilityBadge rating={fragility} /> : null}
-          <span className="nums text-sm text-ink-2">
+          {/* Live region: the verdict recomputes as inputs change elsewhere. */}
+          <span role="status" className="nums text-sm text-ink-2">
             {t("results.banner")}{" "}
             <strong className={advantage >= 0 ? "text-good" : "text-critical"}>
               {formatEURSigned(advantage)}

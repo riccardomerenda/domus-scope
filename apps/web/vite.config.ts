@@ -12,7 +12,7 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: "auto",
-      includeAssets: ["icon.svg"],
+      includeAssets: ["icon.svg", "icon-192.png", "icon-512.png", "icon-maskable-512.png"],
       manifest: {
         name: "DomusScope",
         short_name: "DomusScope",
@@ -27,6 +27,14 @@ export default defineConfig({
             sizes: "any",
             type: "image/svg+xml",
             purpose: "any",
+          },
+          { src: "icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+          { src: "icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+          {
+            src: "icon-maskable-512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "maskable",
           },
         ],
       },

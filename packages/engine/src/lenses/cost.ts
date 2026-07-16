@@ -1,6 +1,6 @@
 import { oneTimePaidThrough, recoverablePaidThrough } from "../costs/resolve";
 import { type CostBreakdown, type LineItem } from "../explain/line-item";
-import { normalizeZero } from "../lib/numbers";
+import { MONEY_EPSILON, normalizeZero } from "../lib/numbers";
 import {
   interestDeductionAt,
   propertyGainsTaxAt,
@@ -33,8 +33,6 @@ export interface CostLensResult {
   breakEvenHold: number | null;
   breakEvenLiquidation: number | null;
 }
-
-const MONEY_EPSILON = 1e-6;
 
 function lineItem(
   id: string,

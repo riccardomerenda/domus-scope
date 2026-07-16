@@ -24,21 +24,3 @@ export const economicAssumptionsSchema = z.object({
 });
 
 export type EconomicAssumptions = z.infer<typeof economicAssumptionsSchema>;
-
-/**
- * Merges an override layer over a base layer, ignoring keys that are absent or
- * explicitly `undefined`. Seed of the Phase-2 `resolveConfig` (which will also
- * record the provenance of each effective value).
- */
-export function mergeAssumptions(
-  base: EconomicAssumptions,
-  override?: { [K in keyof EconomicAssumptions]?: EconomicAssumptions[K] | undefined },
-): EconomicAssumptions {
-  if (override === undefined) return base;
-  const merged: EconomicAssumptions = { ...base };
-  for (const key of Object.keys(base) as (keyof EconomicAssumptions)[]) {
-    const value = override[key];
-    if (value !== undefined) merged[key] = value;
-  }
-  return merged;
-}

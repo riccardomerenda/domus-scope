@@ -48,6 +48,12 @@ export function Shell() {
   const { t } = useLocale();
   return (
     <div className="flex min-h-screen">
+      <a
+        href="#main"
+        className="sr-only rounded-lg bg-ink px-3 py-2 text-sm font-medium text-page focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50"
+      >
+        {t("shell.skipToContent")}
+      </a>
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-hairline bg-surface py-5 md:flex">
         <Wordmark />
         <nav className="mt-6 flex flex-col gap-1 px-2">
@@ -97,7 +103,7 @@ export function Shell() {
             </NavLink>
           </nav>
         </header>
-        <main className="mx-auto w-full max-w-5xl px-4 py-6 md:px-8 md:py-8">
+        <main id="main" tabIndex={-1} className="mx-auto w-full max-w-5xl px-4 py-6 md:px-8 md:py-8">
           <Outlet />
         </main>
       </div>

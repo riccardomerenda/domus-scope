@@ -16,6 +16,7 @@ import { defaultAssumptions, type EconomicAssumptions } from "@domus-scope/engin
 import { db, mergeAppConfig, type StoredScenario } from "../../persistence/db";
 import { runSimulation, type SimulationOutcome } from "../../lib/assess";
 import { formatEUR, formatEURSigned, formatPercent } from "../../lib/format";
+import { seriesMotion } from "../../lib/motion";
 import { useLocale } from "../../i18n";
 import { Card, LensTag, ToggleField, VerdictChip } from "../../components/ui";
 
@@ -289,6 +290,7 @@ function AdvantageOverlay({ compared }: { compared: ComparedScenario[] }) {
                 strokeWidth={2}
                 dot={false}
                 connectNulls={false}
+                {...seriesMotion()}
               />
             ))}
           </LineChart>

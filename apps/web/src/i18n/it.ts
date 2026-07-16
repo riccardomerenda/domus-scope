@@ -18,6 +18,7 @@ export const it: Record<MessageKey, string> = {
   "crash.reload": "Ricarica l'app",
   "crash.export": "Esporta tutti i dati",
   "crash.details": "Dettagli tecnici",
+  "shell.skipToContent": "Salta al contenuto",
   "shell.localFirst": "Local-first: i tuoi dati non lasciano mai questo dispositivo.",
   "shell.themeToLight": "Tema chiaro",
   "shell.themeToDark": "Tema scuro",

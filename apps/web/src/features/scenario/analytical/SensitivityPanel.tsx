@@ -19,6 +19,7 @@ import {
   type VerdictKind,
 } from "@domus-scope/engine";
 import { formatEUR, formatEURSigned, formatPercent } from "../../../lib/format";
+import { seriesMotion } from "../../../lib/motion";
 import { isMessageKey, useLocale, type LocaleContextValue } from "../../../i18n";
 import { Card, FragilityBadge, LensTag, VerdictChip } from "../../../components/ui";
 
@@ -135,7 +136,7 @@ function Tornado({ entries }: { entries: SensitivityResult["entries"] }) {
           formatter={(value) => [formatEURSigned(Number(value)), t("sensitivity.deltaAdvantage")]}
         />
         <ReferenceLine x={0} stroke="var(--ds-baseline)" />
-        <Bar dataKey="delta" radius={[0, 3, 3, 0]}>
+        <Bar dataKey="delta" radius={[0, 3, 3, 0]} {...seriesMotion()}>
           {rows.map((row) => (
             <Cell
               key={row.name}
