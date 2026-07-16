@@ -1,17 +1,34 @@
 import { type RateSchedule } from "./rate-schedule";
 
+/**
+ * Partial early repayment (estinzione anticipata parziale): `amount` of extra
+ * principal paid together with the payment of `month`. `reducePayment`
+ * re-amortizes the remaining balance over the remaining contractual months
+ * (the common Italian bank default); `reduceDuration` keeps the payment so
+ * the mortgage closes earlier. Amounts beyond the open balance are clamped;
+ * events after payoff are ignored.
+ */
+export interface PrepaymentEvent {
+  /** 1-based month index. */
+  month: number;
+  amount: number;
+  mode: "reducePayment" | "reduceDuration";
+}
+
 export interface AmortizationInput {
   /** Initial mortgage principal in EUR, > 0. */
   principal: number;
   /** Contract duration in whole years; independent from the horizon (BR-004). */
   durationYears: number;
   rate: RateSchedule;
+  prepayments?: PrepaymentEvent[];
 }
 
 export interface AmortizationMonth {
   /** 1-based month index. */
   month: number;
   openingBalance: number;
+  /** Actual cash out: includes any extra principal prepaid this month. */
   payment: number;
   interest: number;
   principal: number;
@@ -20,8 +37,9 @@ export interface AmortizationMonth {
 
 export interface AmortizationSchedule {
   input: { principal: number; durationYears: number };
+  /** May end before `durationYears × 12` when prepayments close the loan early. */
   months: AmortizationMonth[];
-  /** The initial constant payment; recomputed only if the rate schedule changes. */
+  /** The initial constant payment; recomputed only on rate changes/prepayments. */
   monthlyPayment: number;
   totalInterest: number;
   totalPrincipal: number;
@@ -84,6 +102,18 @@ export function buildAmortizationSchedule(input: AmortizationInput): Amortizatio
   if (!Number.isInteger(durationYears) || durationYears < 1) {
     throw new RangeError(`Duration must be a whole number of years ≥ 1, got ${durationYears}`);
   }
+  const prepaymentsByMonth = new Map<number, PrepaymentEvent[]>();
+  for (const event of input.prepayments ?? []) {
+    if (!Number.isInteger(event.month) || event.month < 1) {
+      throw new RangeError(`Prepayment month must be a whole number ≥ 1, got ${event.month}`);
+    }
+    if (!Number.isFinite(event.amount) || event.amount <= 0) {
+      throw new RangeError(`Prepayment amount must be a finite number > 0, got ${event.amount}`);
+    }
+    const list = prepaymentsByMonth.get(event.month) ?? [];
+    list.push(event);
+    prepaymentsByMonth.set(event.month, list);
+  }
 
   const numberOfPayments = durationYears * 12;
   const months: AmortizationMonth[] = [];
@@ -101,7 +131,7 @@ export function buildAmortizationSchedule(input: AmortizationInput): Amortizatio
     }
     if (annualRate !== currentAnnualRate) {
       // Variable-rate hook (G9): re-amortize the remaining balance over the
-      // remaining months at the new rate.
+      // remaining contractual months at the new rate.
       currentAnnualRate = annualRate;
       monthlyRate = effectiveMonthlyRate(annualRate);
       payment = frenchMonthlyPayment(balance, monthlyRate, numberOfPayments - month + 1);
@@ -115,6 +145,20 @@ export function buildAmortizationSchedule(input: AmortizationInput): Amortizatio
       principalPart = openingBalance;
       actualPayment = interest + principalPart;
     }
+
+    // Extra principal lands after the regular payment of this month; the row's
+    // payment is the true cash out, so both lenses see it without special cases.
+    const events = prepaymentsByMonth.get(month) ?? [];
+    let extraPrincipal = 0;
+    let reamortize = false;
+    for (const event of events) {
+      const extra = Math.min(event.amount, openingBalance - principalPart - extraPrincipal);
+      if (extra <= 0) continue;
+      extraPrincipal += extra;
+      if (event.mode === "reducePayment") reamortize = true;
+    }
+    principalPart += extraPrincipal;
+    actualPayment += extraPrincipal;
     const closingBalance = openingBalance - principalPart;
 
     months.push({
@@ -127,6 +171,11 @@ export function buildAmortizationSchedule(input: AmortizationInput): Amortizatio
     });
     totalInterest += interest;
     balance = closingBalance;
+
+    if (balance === 0) break; // prepaid to zero: the mortgage is closed
+    if (reamortize && month < numberOfPayments) {
+      payment = frenchMonthlyPayment(balance, monthlyRate, numberOfPayments - month);
+    }
   }
 
   return {

@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { costItemSchema, economicAssumptionsSchema } from "@domus-scope/engine";
+import {
+  costItemSchema,
+  economicAssumptionsSchema,
+  prepaymentSchema,
+  rateStepSchema,
+} from "@domus-scope/engine";
 import {
   db,
   mergeAppConfig,
@@ -59,6 +64,9 @@ const analyticalDataSchema = z.object({
   downPayment: z.number().min(0),
   annualRate: z.number().min(0).lt(1),
   durationYears: z.number().int().min(1).max(50),
+  // Absent in pre-Phase-10 exports; treated as [] everywhere.
+  rateSteps: z.array(rateStepSchema).optional(),
+  prepayments: z.array(prepaymentSchema).optional(),
   rentAlternative: z.object({
     equivalentMonthlyRent: z.number().positive(),
     currentMonthlyRent: z.number().min(0).nullable(),

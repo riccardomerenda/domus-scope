@@ -27,6 +27,8 @@ export const warningThresholdsSchema = z.object({
   shortHorizonYears: z.number().int().min(0).max(50),
   /** W-005: LTV above this fraction warns that rate assumptions may be optimistic. */
   highLtv: fraction,
+  /** W-011: a variable-rate payment this fraction above the initial one warns. */
+  paymentShock: fraction,
 });
 
 /** G4: Italian mortgage-interest deduction, fully parameterized. */
@@ -90,7 +92,7 @@ export const defaultEngineConfig: EngineConfig = {
     liquidationBasis: true,
   },
   sanityBounds: { minRate: -0.1, maxRate: 0.15 },
-  warningThresholds: { shortHorizonYears: 3, highLtv: 0.8 },
+  warningThresholds: { shortHorizonYears: 3, highLtv: 0.8, paymentShock: 0.1 },
   taxCredits: { mortgageInterestDeduction: { rate: 0.19, annualInterestCap: 4_000 } },
   // Empty global layer: values fall back to the engine defaults (§9).
   assumptions: {},

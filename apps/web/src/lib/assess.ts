@@ -95,6 +95,8 @@ export function runSimulation(
             downPayment: data.downPayment,
             annualRate: data.annualRate,
             durationYears: data.durationYears,
+            rateSteps: data.rateSteps ?? [],
+            prepayments: data.prepayments ?? [],
           }
         : { kind: "cash" as const },
     rentAlternative: {

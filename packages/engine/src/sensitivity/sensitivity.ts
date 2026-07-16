@@ -189,11 +189,17 @@ function applyPerturbation(
       };
     case "mortgageRate":
       if (input.financing.kind !== "mortgage") return input;
+      // Shift the whole rate path, not just the initial level: a variable
+      // mortgage keeps its shape under the perturbation.
       return {
         ...input,
         financing: {
           ...input.financing,
           annualRate: Math.max(input.financing.annualRate + delta, 0),
+          rateSteps: input.financing.rateSteps.map((step) => ({
+            ...step,
+            annualRate: Math.max(step.annualRate + delta, 0),
+          })),
         },
       };
     case "rentRelative":

@@ -102,11 +102,13 @@ domus-scope/
 | [`docs/05-roadmap.md`](docs/05-roadmap.md)                   | Phased implementation plan with milestones, tasks, and acceptance criteria                                           |
 | [`docs/06-testing-guide.md`](docs/06-testing-guide.md)       | Hands-on guide: setup in three commands + a guided tour of every feature                                             |
 | [`docs/07-negotiation-lens.md`](docs/07-negotiation-lens.md) | Negotiation lens (Phase 8): reservation price, ZOPA view, concessions, offer log                                     |
+| [`docs/08-variable-rate.md`](docs/08-variable-rate.md)       | Variable-rate paths & partial early repayments (Phase 10): model, conventions, W-011                                 |
 
 ## Status
 
-**All six roadmap phases complete, plus a localization & guidance pass (Phase 7) and a
-negotiation lens (Phase 8).**
+**All six roadmap phases complete, plus a localization & guidance pass (Phase 7), a
+negotiation lens (Phase 8), a reliability pass (Phase 9), and variable-rate mortgages
+with partial early repayments (Phase 10).**
 The blueprint question of the source document (§21)
 — _"given this house, this rent, this mortgage and my liquidity, when does buying beat
 renting, and how fragile is that conclusion?"_ — is answerable end-to-end, printable,
@@ -114,7 +116,7 @@ and remembered:
 
 - **Engine** (Phases 0–2): derived-threshold quick rule, two-lens simulation (itemized
   unrecoverable costs + budget-symmetric net-worth), Italian cost catalog, layered
-  assumptions with provenance, warnings W-001…W-009, `runSensitivity()` with fragility
+  assumptions with provenance, warnings W-001…W-011, `runSensitivity()` with fragility
   index and verdict heatmap. Golden vectors from the source transcript pass byte-exactly;
   property-based tests guard the amortization and simulation invariants.
 - **App** (Phases 3–5): Quick mode with live gauge and explanation drawer, full
@@ -146,8 +148,19 @@ and remembered:
   (early possession, furniture, remediation) so trades become arithmetic, and
   the journal gains an **offer log** where every offered price is re-evaluated
   by the engine.
+- **Phase 9**: reliability pass — error boundary with a data-export escape hatch,
+  persistent-storage request with status in Settings, 404 route, mobile-nav and
+  `<html lang>` accessibility fixes.
+- **Phase 10**: **variable-rate mortgages & partial early repayments**
+  ([spec](docs/08-variable-rate.md)). The rate becomes an explicit, editable
+  **path of step changes** (e.g. Euribor stress scenarios): each step
+  re-amortizes the remaining balance over the remaining contractual months,
+  and W-011 warns when the path produces a **payment shock**. **Estinzioni
+  anticipate parziali** inject extra principal in a chosen year — lowering the
+  payment or shortening the duration — and flow through both lenses as real
+  cash flows. Sensitivity shifts the whole path, not just the initial rate.
 
-112 unit/component tests green plus a **Playwright smoke** that drives the whole journey
+151 unit/component tests green plus a **Playwright smoke** that drives the whole journey
 in a real browser (create → verdict → full analysis → negotiation → decision → reload →
 remembered): `pnpm --filter @domus-scope/web e2e`.
 

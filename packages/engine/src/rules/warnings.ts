@@ -4,7 +4,17 @@
  */
 
 export type WarningId =
-  "W-001" | "W-002" | "W-003" | "W-004" | "W-005" | "W-006" | "W-007" | "W-008" | "W-009" | "W-010";
+  | "W-001"
+  | "W-002"
+  | "W-003"
+  | "W-004"
+  | "W-005"
+  | "W-006"
+  | "W-007"
+  | "W-008"
+  | "W-009"
+  | "W-010"
+  | "W-011";
 
 export type WarningSeverity = "info" | "caution" | "strong";
 
@@ -126,6 +136,22 @@ export function noNegotiationWindowWarning(
       requiredDiscount: requiredDiscount ?? "n/a",
       typicalDiscount,
     },
+  };
+}
+
+/** W-011 (G9): the variable-rate path pushes the payment well above the initial one. */
+export function paymentShockWarning(
+  initialPayment: number,
+  peakPayment: number,
+  peakMonth: number,
+  threshold: number,
+): EngineWarning {
+  return {
+    id: "W-011",
+    severity: "caution",
+    message:
+      "The variable-rate path raises the monthly payment materially above the initial one; check it stays sustainable.",
+    context: { initialPayment, peakPayment, peakMonth, threshold },
   };
 }
 

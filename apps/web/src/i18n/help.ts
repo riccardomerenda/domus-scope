@@ -26,6 +26,8 @@ export const HELP_GROUPS = {
     "financingKind",
     "downPayment",
     "rateTAN",
+    "rateSteps",
+    "prepayments",
     "durationYears",
     "comparability",
     "assumptionPreset",
@@ -157,6 +159,23 @@ const en: Record<HelpTopicId, HelpEntry> = {
     why: "Drives interest, the single biggest unrecoverable cost of buying in the early years.",
     typical: "Fixed-rate mortgages in Italy: ~3–3.5% (2025).",
     direction: "Higher → favors renting.",
+  },
+  rateSteps: {
+    title: "Rate path (variable mortgage)",
+    what: "Scheduled changes of the annual rate: from each step's year the remaining balance is re-amortized over the remaining contractual months.",
+    why: "For a variable mortgage the rate trajectory — not the starting level — decides the outcome: 2022–2024 Euribor moved payments by hundreds of euros. Model 'rises 2pp then falls back' as explicit steps and compare.",
+    typical: "Variable in Italy ≈ Euribor 3M + 1–1.5pp spread. Try a +2pp stress from year 2–3.",
+    pitfall:
+      "This is a deterministic scenario you choose, not a forecast. If a plausible path flips the verdict, the mortgage — not the house — is the risk.",
+    direction: "Rising path → favors renting; W-011 warns on payment shocks.",
+  },
+  prepayments: {
+    title: "Partial early repayment",
+    what: "Extra principal paid into the mortgage in a chosen year, lowering either the payment (re-amortized) or the duration.",
+    why: "Prepaying cuts future interest, but that capital stops earning the alternative return — the simulation weighs both sides honestly.",
+    typical:
+      "Penalty-free on primary-residence mortgages in Italy (art. 40 TUB / Legge Bersani). Banks default to lowering the payment; shortening the duration usually saves more interest.",
+    pitfall: "Don't prepay the emergency fund away: liquidity warnings don't know about future bonuses.",
   },
   durationYears: {
     title: "Duration",
@@ -421,6 +440,23 @@ const it: Record<HelpTopicId, HelpEntry> = {
     why: "Determina gli interessi, il costo non recuperabile più grande dell'acquisto nei primi anni.",
     typical: "Mutui a tasso fisso in Italia: ~3–3,5% (2025).",
     direction: "Più alto → favorisce l'affitto.",
+  },
+  rateSteps: {
+    title: "Percorso del tasso (mutuo variabile)",
+    what: "Variazioni programmate del tasso annuo: dall'anno di ogni gradino il debito residuo viene ri-ammortizzato sui mesi contrattuali rimanenti.",
+    why: "In un mutuo variabile è la traiettoria del tasso — non il livello iniziale — a decidere l'esito: l'Euribor 2022–2024 ha spostato le rate di centinaia di euro. Modella 'sale di 2 punti e poi rientra' come gradini espliciti e confronta.",
+    typical: "Variabile in Italia ≈ Euribor 3M + spread 1–1,5 punti. Prova uno stress di +2 punti dall'anno 2–3.",
+    pitfall:
+      "È uno scenario deterministico che scegli tu, non una previsione. Se un percorso plausibile ribalta il verdetto, il rischio è il mutuo, non la casa.",
+    direction: "Percorso in salita → favorisce l'affitto; W-011 avvisa sugli shock di rata.",
+  },
+  prepayments: {
+    title: "Estinzione anticipata parziale",
+    what: "Capitale extra versato nel mutuo in un anno a scelta, che riduce la rata (ri-ammortizzo) oppure la durata.",
+    why: "Estinguere taglia gli interessi futuri, ma quel capitale smette di rendere al tasso alternativo — la simulazione pesa onestamente entrambi i lati.",
+    typical:
+      "Senza penali sui mutui prima casa in Italia (art. 40 TUB / Legge Bersani). Le banche di default riducono la rata; ridurre la durata di solito fa risparmiare più interessi.",
+    pitfall: "Non estinguere il fondo di emergenza: gli avvisi di liquidità non conoscono i bonus futuri.",
   },
   durationYears: {
     title: "Durata",

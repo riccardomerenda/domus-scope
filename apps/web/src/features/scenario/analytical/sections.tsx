@@ -1,8 +1,12 @@
 import {
   assumptionPresets,
+  buildAmortizationSchedule,
   frenchMonthlyPayment,
   resolveAssumptions,
+  steppedRateFromYears,
   type EconomicAssumptions,
+  type Prepayment,
+  type RateStep,
 } from "@domus-scope/engine";
 import { Link } from "react-router-dom";
 import {
@@ -14,6 +18,7 @@ import { formatEUR, formatPercent } from "../../../lib/format";
 import { useLocale } from "../../../i18n";
 import { type HelpTopicId } from "../../../i18n/help";
 import {
+  Button,
   Card,
   NumberField,
   PercentField,
@@ -21,6 +26,7 @@ import {
   SelectField,
   ToggleField,
 } from "../../../components/ui";
+import { PlusIcon, TrashIcon } from "../../../components/Icons";
 import { InfoDot } from "../../../components/InfoDot";
 import { ProvenanceBadge } from "../../profile/ProfilePage";
 
@@ -116,6 +122,98 @@ export function FinancingSection({ data, onChange }: SectionProps) {
       : 0;
   const ltv = data.property.price > 0 ? principal / data.property.price : 0;
 
+  const rateSteps = data.rateSteps ?? [];
+  const prepayments = data.prepayments ?? [];
+
+  // The preview builds a real schedule; skip it while an edit is mid-flight
+  // (out-of-order years, NaN) — validation surfaces the issue, not a crash.
+  const pathValid =
+    Number.isFinite(data.annualRate) &&
+    data.annualRate >= 0 &&
+    Number.isInteger(data.durationYears) &&
+    data.durationYears >= 1 &&
+    rateSteps.every(
+      (step, index) =>
+        Number.isInteger(step.fromYear) &&
+        step.fromYear >= 2 &&
+        step.fromYear <= data.durationYears &&
+        Number.isFinite(step.annualRate) &&
+        step.annualRate >= 0 &&
+        (index === 0 || step.fromYear > rateSteps[index - 1]!.fromYear),
+    ) &&
+    prepayments.every(
+      (event) =>
+        Number.isInteger(event.year) &&
+        event.year >= 1 &&
+        Number.isFinite(event.amount) &&
+        event.amount > 0,
+    );
+
+  let preview: { initial: number; peak: number; payoffYear: number } | null = null;
+  if (
+    data.financingKind === "mortgage" &&
+    (rateSteps.length > 0 || prepayments.length > 0) &&
+    pathValid &&
+    principal > 0
+  ) {
+    const schedule = buildAmortizationSchedule({
+      principal,
+      durationYears: data.durationYears,
+      rate: steppedRateFromYears(data.annualRate, rateSteps),
+      prepayments: prepayments.map((event) => ({
+        month: event.year * 12,
+        amount: event.amount,
+        mode: event.mode,
+      })),
+    });
+    const prepaymentMonths = new Set(prepayments.map((event) => event.year * 12));
+    let peak = schedule.monthlyPayment;
+    for (const row of schedule.months) {
+      if (!prepaymentMonths.has(row.month) && row.payment > peak) peak = row.payment;
+    }
+    preview = {
+      initial: schedule.monthlyPayment,
+      peak,
+      payoffYear: Math.ceil(schedule.months.length / 12),
+    };
+  }
+
+  const setStep = (index: number, patch: Partial<RateStep>) =>
+    onChange({
+      ...data,
+      rateSteps: rateSteps.map((step, i) => (i === index ? { ...step, ...patch } : step)),
+    });
+  const addStep = () => {
+    const last = rateSteps.at(-1);
+    const fromYear = Math.min(Math.max((last?.fromYear ?? 1) + 1, 2), data.durationYears);
+    onChange({
+      ...data,
+      rateSteps: [
+        ...rateSteps,
+        { fromYear, annualRate: (last?.annualRate ?? data.annualRate) + 0.01 },
+      ],
+    });
+  };
+  const setPrepayment = (index: number, patch: Partial<Prepayment>) =>
+    onChange({
+      ...data,
+      prepayments: prepayments.map((event, i) =>
+        i === index ? { ...event, ...patch } : event,
+      ),
+    });
+  const addPrepayment = () =>
+    onChange({
+      ...data,
+      prepayments: [
+        ...prepayments,
+        {
+          year: Math.max(Math.min((prepayments.at(-1)?.year ?? 0) + 5, data.durationYears), 1),
+          amount: 10_000,
+          mode: "reducePayment",
+        },
+      ],
+    });
+
   return (
     <Section title={t("inputs.financing")} help="financingKind">
       <Segmented
@@ -162,6 +260,106 @@ export function FinancingSection({ data, onChange }: SectionProps) {
               payment: formatEUR(payment),
             })}
           </p>
+
+          <div className="border-t border-hairline pt-3">
+            <h4 className="flex items-center gap-1.5 text-xs font-semibold text-ink">
+              {t("inputs.ratePath")}
+              <InfoDot topic="rateSteps" />
+            </h4>
+            <p className="mt-0.5 text-xs text-ink-3">{t("inputs.ratePathHint")}</p>
+            {rateSteps.map((step, index) => (
+              <div key={index} className="mt-2 flex items-end gap-2">
+                <NumberField
+                  label={t("inputs.fromYear")}
+                  value={step.fromYear}
+                  min={2}
+                  step={1}
+                  onChange={(fromYear) => setStep(index, { fromYear })}
+                />
+                <PercentField
+                  label={t("inputs.newRate")}
+                  value={step.annualRate}
+                  onChange={(annualRate) => setStep(index, { annualRate })}
+                />
+                <Button
+                  variant="danger"
+                  className="px-2 py-2"
+                  aria-label={t("inputs.removeStepAria", { n: index + 1 })}
+                  onClick={() =>
+                    onChange({ ...data, rateSteps: rateSteps.filter((_, i) => i !== index) })
+                  }
+                >
+                  <TrashIcon width={14} height={14} />
+                </Button>
+              </div>
+            ))}
+            <Button className="mt-2" onClick={addStep}>
+              <PlusIcon /> {t("inputs.addRateStep")}
+            </Button>
+          </div>
+
+          <div className="border-t border-hairline pt-3">
+            <h4 className="flex items-center gap-1.5 text-xs font-semibold text-ink">
+              {t("inputs.prepayments")}
+              <InfoDot topic="prepayments" />
+            </h4>
+            <p className="mt-0.5 text-xs text-ink-3">{t("inputs.prepaymentsHint")}</p>
+            {prepayments.map((event, index) => (
+              <div key={index} className="mt-2 flex items-end gap-2">
+                <NumberField
+                  label={t("inputs.inYear")}
+                  value={event.year}
+                  min={1}
+                  step={1}
+                  onChange={(year) => setPrepayment(index, { year })}
+                />
+                <NumberField
+                  label={t("negotiation.amount")}
+                  suffix={t("suffix.eur")}
+                  value={event.amount}
+                  min={0}
+                  step={1_000}
+                  onChange={(amount) => setPrepayment(index, { amount })}
+                />
+                <SelectField
+                  label={t("inputs.prepayMode")}
+                  value={event.mode}
+                  onChange={(e) =>
+                    setPrepayment(index, { mode: e.target.value as Prepayment["mode"] })
+                  }
+                >
+                  <option value="reducePayment">{t("inputs.prepayMode.reducePayment")}</option>
+                  <option value="reduceDuration">{t("inputs.prepayMode.reduceDuration")}</option>
+                </SelectField>
+                <Button
+                  variant="danger"
+                  className="px-2 py-2"
+                  aria-label={t("inputs.removePrepaymentAria", { n: index + 1 })}
+                  onClick={() =>
+                    onChange({ ...data, prepayments: prepayments.filter((_, i) => i !== index) })
+                  }
+                >
+                  <TrashIcon width={14} height={14} />
+                </Button>
+              </div>
+            ))}
+            <Button className="mt-2" onClick={addPrepayment}>
+              <PlusIcon /> {t("inputs.addPrepayment")}
+            </Button>
+          </div>
+
+          {preview ? (
+            <p className="nums text-xs text-ink-3">
+              {t("inputs.pathPreviewLine", {
+                initial: formatEUR(preview.initial),
+                peak: formatEUR(preview.peak),
+                payoffYear: preview.payoffYear,
+              })}
+            </p>
+          ) : null}
+          {(rateSteps.length > 0 || prepayments.length > 0) && !pathValid ? (
+            <p className="text-xs text-critical">{t("inputs.ratePathInvalid")}</p>
+          ) : null}
         </div>
       ) : (
         <p className="mt-3 text-xs text-ink-3">{t("inputs.cashNote")}</p>

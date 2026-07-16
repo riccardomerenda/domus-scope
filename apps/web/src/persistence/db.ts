@@ -5,6 +5,8 @@ import {
   type Concession,
   type CostItem,
   type EconomicAssumptions,
+  type Prepayment,
+  type RateStep,
 } from "@domus-scope/engine";
 
 /**
@@ -74,6 +76,10 @@ export interface AnalyticalData {
   downPayment: number;
   annualRate: number;
   durationYears: number;
+  /** Variable-rate path (Phase 10); pre-Phase-10 records lack it — treat absent as []. */
+  rateSteps?: RateStep[] | undefined;
+  /** Partial early repayments (Phase 10); pre-Phase-10 records lack it. */
+  prepayments?: Prepayment[] | undefined;
   rentAlternative: {
     equivalentMonthlyRent: number;
     currentMonthlyRent: number | null;

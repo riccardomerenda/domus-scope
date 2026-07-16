@@ -72,6 +72,8 @@ export const it: Record<MessageKey, string> = {
   "warning.W-009": "Un'assunzione è fuori dai limiti di plausibilità configurati.",
   "warning.W-010":
     "Con le tue assunzioni, il prezzo che puoi difendere è sotto quanto ottiene una trattativa tipica da questo prezzo richiesto.",
+  "warning.W-011":
+    "Il percorso a tasso variabile porta la rata ben oltre quella iniziale: verifica che resti sostenibile.",
 
   /* ---------- engine verdict reasons ---------- */
   "reason.quick.rule.above":
@@ -233,6 +235,26 @@ export const it: Record<MessageKey, string> = {
   "inputs.paymentLine": "Mutuo {amount} · LTV {ltv} · rata ≈ {payment}/mese (piano esatto)",
   "inputs.cashNote":
     "L'intero prezzo è pagato subito: niente interessi, ma tutto il capitale porta costo opportunità.",
+  "inputs.ratePath": "Percorso del tasso (mutuo variabile)",
+  "inputs.ratePathHint":
+    "Vuoto = tasso fisso. Ogni variazione ri-ammortizza il debito residuo da quell'anno in poi — modella gli scenari Euribor come gradini espliciti.",
+  "inputs.fromYear": "Dall'anno",
+  "inputs.newRate": "Nuovo tasso (TAN)",
+  "inputs.addRateStep": "Aggiungi variazione",
+  "inputs.removeStepAria": "Rimuovi variazione {n}",
+  "inputs.prepayments": "Estinzioni anticipate parziali",
+  "inputs.prepaymentsHint":
+    "Capitale extra versato con l'ultima rata di quell'anno (senza penali sulla prima casa in Italia).",
+  "inputs.inYear": "Nell'anno",
+  "inputs.prepayMode": "Dopo il versamento",
+  "inputs.prepayMode.reducePayment": "Riduci la rata",
+  "inputs.prepayMode.reduceDuration": "Riduci la durata",
+  "inputs.addPrepayment": "Aggiungi estinzione",
+  "inputs.removePrepaymentAria": "Rimuovi estinzione {n}",
+  "inputs.pathPreviewLine":
+    "Rata: {initial} iniziale · {peak} massima. Il mutuo si chiude nell'anno {payoffYear}.",
+  "inputs.ratePathInvalid":
+    "Controlla il percorso: le variazioni richiedono anni crescenti entro la durata, le estinzioni un anno e un importo positivo.",
   "inputs.rent": "Alternativa in affitto",
   "inputs.rentHint":
     "Confronta con l'affitto di una casa davvero comparabile — non necessariamente quello che paghi oggi.",

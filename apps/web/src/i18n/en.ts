@@ -72,6 +72,8 @@ export const en = {
   "warning.W-009": "An assumption lies outside the configured plausibility bounds.",
   "warning.W-010":
     "Under your assumptions, the price you can defend is below what a typical negotiation achieves from this asking price.",
+  "warning.W-011":
+    "The variable-rate path raises the monthly payment materially above the initial one; check it stays sustainable.",
 
   /* ---------- engine verdict reasons ---------- */
   "reason.quick.rule.above":
@@ -231,6 +233,26 @@ export const en = {
   "inputs.paymentLine": "Mortgage {amount} · LTV {ltv} · payment ≈ {payment}/mo (exact schedule)",
   "inputs.cashNote":
     "The full price is paid upfront: no interest, but the whole capital carries opportunity cost (BR-014).",
+  "inputs.ratePath": "Rate path (variable mortgage)",
+  "inputs.ratePathHint":
+    "Empty = fixed rate. Each change re-amortizes the remaining balance from that year on — model Euribor scenarios as explicit steps.",
+  "inputs.fromYear": "From year",
+  "inputs.newRate": "New rate (TAN)",
+  "inputs.addRateStep": "Add rate change",
+  "inputs.removeStepAria": "Remove rate change {n}",
+  "inputs.prepayments": "Partial early repayments",
+  "inputs.prepaymentsHint":
+    "Extra principal paid with the last payment of that year (penalty-free on a primary residence in Italy).",
+  "inputs.inYear": "In year",
+  "inputs.prepayMode": "Afterwards",
+  "inputs.prepayMode.reducePayment": "Lower the payment",
+  "inputs.prepayMode.reduceDuration": "Shorten the duration",
+  "inputs.addPrepayment": "Add repayment",
+  "inputs.removePrepaymentAria": "Remove repayment {n}",
+  "inputs.pathPreviewLine":
+    "Payment: {initial} initial · {peak} peak. The mortgage closes in year {payoffYear}.",
+  "inputs.ratePathInvalid":
+    "Check the path: rate changes need increasing years within the duration, repayments a year and a positive amount.",
   "inputs.rent": "Rent alternative",
   "inputs.rentHint":
     "Compare against the rent of a genuinely comparable home — not necessarily what you pay today (FR-004).",

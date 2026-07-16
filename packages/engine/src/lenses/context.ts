@@ -2,7 +2,7 @@ import { resolveCostItems, type ResolvedCosts } from "../costs/resolve";
 import {
   aggregateByYear,
   buildAmortizationSchedule,
-  fixedRate,
+  steppedRateFromYears,
   type AmortizationSchedule,
   type AmortizationYear,
 } from "../mortgage";
@@ -69,7 +69,14 @@ export function buildContext(
       ? buildAmortizationSchedule({
           principal: mortgagePrincipal,
           durationYears: input.financing.durationYears,
-          rate: fixedRate(input.financing.annualRate),
+          // Empty steps degrade to a fixed rate (G9).
+          rate: steppedRateFromYears(input.financing.annualRate, input.financing.rateSteps),
+          // Prepayments land with the last payment of their year.
+          prepayments: input.financing.prepayments.map((event) => ({
+            month: event.year * 12,
+            amount: event.amount,
+            mode: event.mode,
+          })),
         })
       : null;
   const scheduleYears = schedule

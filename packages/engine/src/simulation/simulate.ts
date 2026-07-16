@@ -13,6 +13,7 @@ import {
   lowComparabilityWarning,
   negativeEquityWarning,
   opportunityCostDisabledWarning,
+  paymentShockWarning,
   shortHorizonWarning,
   type EngineWarning,
 } from "../rules/warnings";
@@ -199,6 +200,27 @@ function collectWarnings(
     }
     if (input.horizonYears > input.financing.durationYears) {
       warnings.push(horizonBeyondPayoffWarning(input.horizonYears, input.financing.durationYears));
+    }
+    // W-011: payment shock along a variable-rate path. Prepayment months are
+    // excluded — their spike is a chosen extra payment, not a rate effect.
+    if (input.financing.rateSteps.length > 0 && ctx.schedule) {
+      const prepaymentMonths = new Set(input.financing.prepayments.map((p) => p.year * 12));
+      let peak = ctx.schedule.months[0]!;
+      for (const row of ctx.schedule.months) {
+        if (prepaymentMonths.has(row.month)) continue;
+        if (row.payment > peak.payment) peak = row;
+      }
+      const initial = ctx.schedule.monthlyPayment;
+      if (peak.payment > initial * (1 + config.warningThresholds.paymentShock)) {
+        warnings.push(
+          paymentShockWarning(
+            initial,
+            peak.payment,
+            peak.month,
+            config.warningThresholds.paymentShock,
+          ),
+        );
+      }
     }
   }
   if (input.profile && liquidityAfterPurchase !== null) {
