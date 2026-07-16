@@ -156,6 +156,13 @@ export const formulaRegistry: Record<string, FormulaDescriptor> = {
     expression: "credit_t = −rate × min(interest_t, cap)",
     description: "Mortgage-interest tax credit (G4), a negative unrecoverable cost.",
   },
+  "cost.renovationCredit.year": {
+    id: "cost.renovationCredit.year",
+    expression: "credit_t = −rate × min(spend, cap) / years, for `years` years from the work",
+    description:
+      "Renovation tax credit (G14, detrazione ristrutturazione): eligible works return a " +
+      "share of the capped spend in equal annual IRPEF installments.",
+  },
   "cost.opportunity.year": {
     id: "cost.opportunity.year",
     expression: "opportunity_t = invested_capital_{start of t} × r_alt",
@@ -207,5 +214,12 @@ export const formulaRegistry: Record<string, FormulaDescriptor> = {
     id: "wealth.deposits",
     expression: "Σ recoverable renter payments",
     description: "Deposits returned to the renter, flat (BR-016).",
+  },
+  "wealth.propertyGainsTax": {
+    id: "wealth.propertyGainsTax",
+    expression: "tax = rate × max(value_t − selling_costs − price, 0)",
+    description:
+      "Italian plusvalenza (G15): the gain on a non-primary property sold within 5 years " +
+      "of purchase is taxed; primary residences and later sales are exempt.",
   },
 };

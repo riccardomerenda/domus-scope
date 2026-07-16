@@ -56,6 +56,8 @@ const analyticalDataSchema = z.object({
     // Optional: pre-Phase-8 exports lack it.
     marketValue: z.number().positive().nullable().optional(),
     cadastralValue: z.number().min(0).nullable(),
+    // Optional: pre-Phase-11 exports lack it; absent = primary residence.
+    primaryResidence: z.boolean().optional(),
     zone: z.string(),
     sizeSqm: z.number().positive().nullable(),
     notes: z.string(),

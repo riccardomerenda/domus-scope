@@ -25,6 +25,12 @@ export const italianDefaults = {
   rentAgencyMonths: 1,
   /** Tenant half of the 2%-of-annual-rent contract registration. */
   rentRegistrationAnnualShare: 0.01,
+  /**
+   * IMU for a second home, expressed against the registry cadastral value:
+   * ≈0.86% average aliquota on the IMU base (rendita ×1.05×160), rescaled to
+   * the registry base (rendita ×126) → 0.86% × 168/126 ≈ 1.15%.
+   */
+  imuRateOnCadastral: 0.0115,
 } as const;
 
 export type PurchaseTaxRegime = "primaryExisting" | "otherExisting" | "newBuildPrimary";
@@ -117,8 +123,29 @@ export function italianPurchaseCostItems(params: ItalianPurchaseParams): CostIte
       timing: { kind: "oneTime", month: 0, amount: params.renovation.amount },
       recoverability: { kind: "partial", share: params.renovation.valueRetention },
       sign: "cost",
+      renovationCredit: true,
       enabled: true,
-      notes: "The retained share is treated as extra sale proceeds (flat, no appreciation).",
+      notes:
+        "The retained share is treated as extra sale proceeds (flat, no appreciation). " +
+        "Eligible for the renovation tax credit (G14).",
+    });
+  }
+  if (regime === "otherExisting") {
+    items.push({
+      id: "it-imu",
+      label: "IMU (second home)",
+      scenario: "buy",
+      timing: {
+        kind: "recurring",
+        base: { kind: "percentOfCadastral", rate: d.imuRateOnCadastral },
+        growth: { kind: "rate", rate: 0 },
+      },
+      recoverability: { kind: "none" },
+      sign: "cost",
+      enabled: true,
+      notes:
+        "≈0.86% average aliquota on the IMU base (rendita ×1.05×160), expressed against the " +
+        "registry cadastral value. Needs the cadastral value; edit to your municipality's rate.",
     });
   }
   if (params.condoFeesAnnual !== undefined && params.condoFeesAnnual > 0) {

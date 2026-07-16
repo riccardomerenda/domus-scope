@@ -1,7 +1,12 @@
 import { oneTimePaidThrough, recoverablePaidThrough } from "../costs/resolve";
 import { type CostBreakdown, type LineItem } from "../explain/line-item";
 import { normalizeZero } from "../lib/numbers";
-import { interestDeductionAt, type ProjectionContext } from "./context";
+import {
+  interestDeductionAt,
+  propertyGainsTaxAt,
+  renovationCreditAt,
+  type ProjectionContext,
+} from "./context";
 
 /**
  * Lens A — unrecoverable costs (domain spec §5). Itemized per year with full
@@ -194,6 +199,23 @@ export function runCostLens(ctx: ProjectionContext): CostLensResult {
         ),
       );
     }
+    const renovationCredit = renovationCreditAt(ctx, t);
+    if (renovationCredit !== 0) {
+      buyItems.push(
+        lineItem(
+          "buy.renovationCredit",
+          "Renovation tax credit",
+          renovationCredit,
+          "cost.renovationCredit.year",
+          {
+            year: t,
+            rate: config.taxCredits.renovationDeduction.rate,
+            cap: config.taxCredits.renovationDeduction.cap,
+            years: config.taxCredits.renovationDeduction.years,
+          },
+        ),
+      );
+    }
     if (opportunityOn) {
       const investedCapital =
         ctx.initialOutlay +
@@ -233,7 +255,10 @@ export function runCostLens(ctx: ProjectionContext): CostLensResult {
       buy,
       cumulativeRent,
       cumulativeBuyHold,
-      cumulativeBuyLiquidation: cumulativeBuyHold + valueEnd * ctx.input.sellingCostRate,
+      // Liquidation adds the hypothetical sale costs and, for a non-primary
+      // property sold within 5 years, the capital-gains tax (G15).
+      cumulativeBuyLiquidation:
+        cumulativeBuyHold + valueEnd * ctx.input.sellingCostRate + propertyGainsTaxAt(ctx, t),
     });
   }
 

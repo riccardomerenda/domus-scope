@@ -36,6 +36,8 @@ export const formulaDescriptionsIt: Record<string, string> = {
     "Voce una tantum del catalogo: solo la quota non recuperabile è un costo; le quote recuperabili portano costo opportunità e tornano alla liquidazione.",
   "cost.deduction.year":
     "Detrazione fiscale sugli interessi del mutuo, un costo non recuperabile negativo.",
+  "cost.renovationCredit.year":
+    "Detrazione ristrutturazione: i lavori idonei restituiscono una quota della spesa (con tetto) in rate annuali IRPEF uguali.",
   "cost.opportunity.year":
     "Costo opportunità lordo del capitale immobilizzato: esborso iniziale + costi una tantum pagati + capitale rimborsato. Sempre in coppia con il credito di rivalutazione.",
   "cost.appreciationCredit.year":
@@ -50,4 +52,6 @@ export const formulaDescriptionsIt: Record<string, string> = {
   "wealth.portfolio":
     "Portafoglio a budget simmetrico: chi spende meno ogni mese investe la differenza. La tassazione sul capital gain si applica alla liquidazione.",
   "wealth.deposits": "Cauzioni restituite all'inquilino, a valore nominale.",
+  "wealth.propertyGainsTax":
+    "Plusvalenza: il guadagno su un immobile non prima casa venduto entro 5 anni dall'acquisto è tassato; prima casa e vendite successive sono esenti.",
 };

@@ -93,6 +93,7 @@ export function buildContext(
     horizonYears,
     propertyValueStartOfYear: (t: number) => propertyValueEndOfYear(t - 1),
     annualRentAt,
+    cadastralValue: input.property.cadastralValue ?? null,
   };
 
   return {
@@ -114,9 +115,40 @@ export function buildContext(
   };
 }
 
-/** Annual mortgage-interest tax credit (G4), negative or zero. */
+/** Annual mortgage-interest tax credit (G4), negative or zero. Primary residence only. */
 export function interestDeductionAt(ctx: ProjectionContext, yearInterest: number): number {
   if (!ctx.schedule || !ctx.config.toggles.mortgageInterestDeduction) return 0;
+  if (!ctx.input.property.primaryResidence) return 0;
   const { rate, annualInterestCap } = ctx.config.taxCredits.mortgageInterestDeduction;
   return -(rate * Math.min(yearInterest, annualInterestCap));
+}
+
+/**
+ * G14: detrazione ristrutturazione — year-t installment of the credit earned
+ * by eligible one-time works (50% of the capped spend over 10 years). ≤ 0.
+ */
+export function renovationCreditAt(ctx: ProjectionContext, t: number): number {
+  if (!ctx.config.toggles.renovationDeduction) return 0;
+  const { rate, cap, years } = ctx.config.taxCredits.renovationDeduction;
+  let credit = 0;
+  for (const event of ctx.buyCosts.oneTime) {
+    if (!event.renovationCredit || event.amount <= 0) continue;
+    if (t >= event.year && t < event.year + years) {
+      credit += (rate * Math.min(event.amount, cap)) / years;
+    }
+  }
+  return -credit;
+}
+
+/**
+ * G15: plusvalenza — tax due on the property gain if sold at the end of year
+ * t. Primary residences are exempt; so are sales from `withinYears` on. The
+ * taxable gain is the sale value net of selling costs minus the price paid.
+ */
+export function propertyGainsTaxAt(ctx: ProjectionContext, t: number): number {
+  if (ctx.input.property.primaryResidence) return 0;
+  if (t >= ctx.config.propertyCapitalGains.withinYears) return 0;
+  const value = ctx.propertyValueEndOfYear(t);
+  const gain = value - value * ctx.input.sellingCostRate - ctx.price;
+  return gain > 0 ? ctx.config.propertyCapitalGains.rate * gain : 0;
 }

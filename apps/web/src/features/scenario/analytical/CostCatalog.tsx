@@ -50,7 +50,8 @@ export function CostCatalogSection({
         ? { cadastralValue: data.property.cadastralValue }
         : {}),
       ...(principal !== undefined && principal > 0 ? { mortgagePrincipal: principal } : {}),
-      regime: "primaryExisting",
+      // Second homes get the 9% registration regime plus the IMU item (Phase 11).
+      regime: (data.property.primaryResidence ?? true) ? "primaryExisting" : "otherExisting",
     });
     mergeGenerated(generated.map(localizeLabel));
   };
@@ -187,7 +188,9 @@ function describeItem(item: CostItem, t: LocaleContextValue["t"]): string {
       ? t("costs.desc.fixedPerYear", { amount: formatEUR(base.amount) })
       : base.kind === "percentOfValue"
         ? t("costs.desc.percentOfValue", { rate: formatPercent(base.rate, 2) })
-        : t("costs.desc.percentOfRent", { rate: formatPercent(base.rate, 2) });
+        : base.kind === "percentOfCadastral"
+          ? t("costs.desc.percentOfCadastral", { rate: formatPercent(base.rate, 2) })
+          : t("costs.desc.percentOfRent", { rate: formatPercent(base.rate, 2) });
   const growth = item.timing.growth;
   const growthText =
     base.kind === "fixedAnnual"
@@ -209,12 +212,13 @@ interface DraftItem {
   timingKind: "oneTime" | "recurring";
   amount: number;
   month: number;
-  baseKind: "fixedAnnual" | "percentOfValue" | "percentOfRent";
+  baseKind: "fixedAnnual" | "percentOfValue" | "percentOfRent" | "percentOfCadastral";
   rate: number;
   growthKind: "rate" | "tracksValue" | "tracksRent";
   growthRate: number;
   recoverabilityKind: "none" | "full" | "partial";
   recoverableShare: number;
+  renovationCredit: boolean;
   notes: string;
 }
 
@@ -233,6 +237,7 @@ function toDraft(item: CostItem | null): DraftItem {
       growthRate: 0,
       recoverabilityKind: "none",
       recoverableShare: 0.5,
+      renovationCredit: false,
       notes: "",
     };
   }
@@ -242,6 +247,7 @@ function toDraft(item: CostItem | null): DraftItem {
     label: item.label,
     scenario: item.scenario,
     sign: item.sign,
+    renovationCredit: item.renovationCredit === true,
     notes: item.notes,
     recoverabilityKind: item.recoverability.kind,
     recoverableShare:
@@ -265,6 +271,9 @@ function fromDraft(draft: DraftItem, id: string): unknown {
     label: draft.label.trim(),
     scenario: draft.scenario,
     sign: draft.sign,
+    // Only meaningful for one-time buy-side works (G14).
+    renovationCredit:
+      draft.renovationCredit && draft.timingKind === "oneTime" && draft.scenario !== "rent",
     enabled: true,
     notes: draft.notes,
     recoverability:
@@ -377,22 +386,31 @@ function CostItemDialog({
             </SelectField>
 
             {draft.timingKind === "oneTime" ? (
-              <div className="grid grid-cols-2 gap-3">
-                <NumberField
-                  label={t("costs.dialog.amount")}
-                  suffix={t("suffix.eur")}
-                  value={draft.amount}
-                  min={0}
-                  step={100}
-                  onChange={(amount) => set({ amount })}
-                />
-                <NumberField
-                  label={t("costs.dialog.month")}
-                  value={draft.month}
-                  min={0}
-                  step={1}
-                  onChange={(month) => set({ month })}
-                />
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <NumberField
+                    label={t("costs.dialog.amount")}
+                    suffix={t("suffix.eur")}
+                    value={draft.amount}
+                    min={0}
+                    step={100}
+                    onChange={(amount) => set({ amount })}
+                  />
+                  <NumberField
+                    label={t("costs.dialog.month")}
+                    value={draft.month}
+                    min={0}
+                    step={1}
+                    onChange={(month) => set({ month })}
+                  />
+                </div>
+                {draft.scenario !== "rent" ? (
+                  <ToggleField
+                    label={t("costs.dialog.renovationCredit")}
+                    checked={draft.renovationCredit}
+                    onChange={(renovationCredit) => set({ renovationCredit })}
+                  />
+                ) : null}
               </div>
             ) : (
               <div className="space-y-3">
@@ -406,6 +424,7 @@ function CostItemDialog({
                   <option value="fixedAnnual">{t("costs.dialog.fixedAnnual")}</option>
                   <option value="percentOfValue">{t("costs.dialog.percentValue")}</option>
                   <option value="percentOfRent">{t("costs.dialog.percentRent")}</option>
+                  <option value="percentOfCadastral">{t("costs.dialog.percentCadastral")}</option>
                 </SelectField>
                 {draft.baseKind === "fixedAnnual" ? (
                   <div className="grid grid-cols-2 gap-3">
@@ -441,7 +460,9 @@ function CostItemDialog({
                     label={
                       draft.baseKind === "percentOfValue"
                         ? t("costs.dialog.percentValuePerYear")
-                        : t("costs.dialog.percentAnnualRent")
+                        : draft.baseKind === "percentOfCadastral"
+                          ? t("costs.dialog.percentCadastralPerYear")
+                          : t("costs.dialog.percentAnnualRent")
                     }
                     value={draft.rate}
                     onChange={(rate) => set({ rate })}

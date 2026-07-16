@@ -68,6 +68,8 @@ export interface AnalyticalData {
     /** Value anchor when it differs from the price (FR-021); pre-Phase-8 records lack it. */
     marketValue?: number | null | undefined;
     cadastralValue: number | null;
+    /** Abitazione principale (Phase 11); pre-Phase-11 records lack it — absent = true. */
+    primaryResidence?: boolean | undefined;
     zone: string;
     sizeSqm: number | null;
     notes: string;

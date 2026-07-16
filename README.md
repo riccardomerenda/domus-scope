@@ -103,12 +103,14 @@ domus-scope/
 | [`docs/06-testing-guide.md`](docs/06-testing-guide.md)       | Hands-on guide: setup in three commands + a guided tour of every feature                                             |
 | [`docs/07-negotiation-lens.md`](docs/07-negotiation-lens.md) | Negotiation lens (Phase 8): reservation price, ZOPA view, concessions, offer log                                     |
 | [`docs/08-variable-rate.md`](docs/08-variable-rate.md)       | Variable-rate paths & partial early repayments (Phase 10): model, conventions, W-011                                 |
+| [`docs/09-italian-taxes.md`](docs/09-italian-taxes.md)       | Italian taxes that move the verdict (Phase 11): plusvalenza, detrazione ristrutturazione, IMU                        |
 
 ## Status
 
 **All six roadmap phases complete, plus a localization & guidance pass (Phase 7), a
-negotiation lens (Phase 8), a reliability pass (Phase 9), and variable-rate mortgages
-with partial early repayments (Phase 10).**
+negotiation lens (Phase 8), a reliability pass (Phase 9), variable-rate mortgages
+with partial early repayments (Phase 10), and the Italian taxes that move the
+verdict (Phase 11).**
 The blueprint question of the source document (§21)
 — _"given this house, this rent, this mortgage and my liquidity, when does buying beat
 renting, and how fragile is that conclusion?"_ — is answerable end-to-end, printable,
@@ -159,8 +161,18 @@ and remembered:
   anticipate parziali** inject extra principal in a chosen year — lowering the
   payment or shortening the duration — and flow through both lenses as real
   cash flows. Sensitivity shifts the whole path, not just the initial rate.
+- **Phase 11**: **Italian taxes that move the verdict**
+  ([spec](docs/09-italian-taxes.md)). A single **primary residence** toggle
+  drives three fiscal effects: the mortgage-interest deduction (primary
+  only), the **plusvalenza** — 26% on the gain of a non-primary property
+  sold within 5 years, shown on the liquidation basis of both lenses with a
+  traced composition line — and the purchase-tax regime (2% vs 9%
+  registration, plus an **IMU** preset on the cadastral base via the new
+  `percentOfCadastral` cost kind). One-time works flagged in the cost
+  catalog earn the **detrazione ristrutturazione** (50% of the capped spend
+  over 10 years), symmetric with the interest deduction.
 
-151 unit/component tests green plus a **Playwright smoke** that drives the whole journey
+167 unit/component tests green plus a **Playwright smoke** that drives the whole journey
 in a real browser (create → verdict → full analysis → negotiation → decision → reload →
 remembered): `pnpm --filter @domus-scope/web e2e`.
 

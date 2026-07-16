@@ -124,6 +124,7 @@ export const en = {
   "costItem.it-buyer-agency": "Buyer agency fee",
   "costItem.it-bank-fees": "Bank fees (istruttoria, perizia)",
   "costItem.it-renovation": "Renovation",
+  "costItem.it-imu": "IMU (second home)",
   "costItem.it-condo-fees": "Condominium fees (owner share)",
   "costItem.it-home-insurance": "Home + mortgage life insurance",
   "costItem.it-rent-deposit": "Security deposit",
@@ -233,6 +234,7 @@ export const en = {
   "inputs.paymentLine": "Mortgage {amount} · LTV {ltv} · payment ≈ {payment}/mo (exact schedule)",
   "inputs.cashNote":
     "The full price is paid upfront: no interest, but the whole capital carries opportunity cost (BR-014).",
+  "inputs.primaryResidence": "Primary residence (abitazione principale)",
   "inputs.ratePath": "Rate path (variable mortgage)",
   "inputs.ratePathHint":
     "Empty = fixed rate. Each change re-amortizes the remaining balance from that year on — model Euribor scenarios as explicit steps.",
@@ -296,6 +298,7 @@ export const en = {
   "costs.desc.fixedPerYear": "{amount}/year",
   "costs.desc.percentOfValue": "{rate} of property value/year",
   "costs.desc.percentOfRent": "{rate} of annual rent",
+  "costs.desc.percentOfCadastral": "{rate} of the cadastral value / year",
   "costs.desc.growingAt": ", growing {rate}/year",
   "costs.desc.tracksValue": ", tracks property value",
   "costs.desc.tracksRent": ", tracks rent",
@@ -326,6 +329,9 @@ export const en = {
   "costs.dialog.growthRate": "Growth rate / year",
   "costs.dialog.percentValuePerYear": "% of value / year",
   "costs.dialog.percentAnnualRent": "% of annual rent",
+  "costs.dialog.percentCadastral": "% of cadastral value",
+  "costs.dialog.percentCadastralPerYear": "% of cadastral value / year",
+  "costs.dialog.renovationCredit": "Eligible for the renovation tax credit (50% over 10 years)",
   "costs.dialog.recoverability": "Recoverability (BR-016)",
   "costs.dialog.recoverNone": "None — pure cost",
   "costs.dialog.recoverFull": "Full — returned (deposit)",

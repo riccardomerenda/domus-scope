@@ -109,6 +109,14 @@ export function PropertySection({ data, onChange }: SectionProps) {
           onChange={(v) => set({ sizeSqm: Number.isFinite(v) && v > 0 ? v : null })}
         />
       </div>
+      <div className="mt-3 flex items-center gap-1.5">
+        <ToggleField
+          label={t("inputs.primaryResidence")}
+          checked={data.property.primaryResidence ?? true}
+          onChange={(primaryResidence) => set({ primaryResidence })}
+        />
+        <InfoDot topic="primaryResidence" />
+      </div>
     </Section>
   );
 }

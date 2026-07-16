@@ -1,7 +1,12 @@
 import { recoverablePaidThrough, type OneTimeEvent } from "../costs/resolve";
 import { type CostBreakdown, type LineItem } from "../explain/line-item";
 import { normalizeZero } from "../lib/numbers";
-import { interestDeductionAt, type ProjectionContext } from "./context";
+import {
+  interestDeductionAt,
+  propertyGainsTaxAt,
+  renovationCreditAt,
+  type ProjectionContext,
+} from "./context";
 
 /**
  * Lens B — net-worth simulation (domain spec §6). Both agents start with the
@@ -102,7 +107,8 @@ export function runWealthLens(ctx: ProjectionContext): WealthLensResult {
     let buy =
       valueStart * assumptions.maintenanceRate +
       valueStart * assumptions.recurringTaxRate +
-      interestDeductionAt(ctx, interest);
+      interestDeductionAt(ctx, interest) +
+      renovationCreditAt(ctx, t);
     for (const series of ctx.buyCosts.recurring) buy += series.annual[t - 1] ?? 0;
     let rent = 0;
     for (const series of ctx.rentCosts.recurring) rent += series.annual[t - 1] ?? 0;
@@ -159,10 +165,12 @@ export function runWealthLens(ctx: ProjectionContext): WealthLensResult {
     const recoveredRent = recoverablePaidThrough(ctx.rentCosts.oneTime, month);
     const buyerNet = netOfCapitalGains(buyerPortfolio, buyerContributed, taxRate);
     const renterNet = netOfCapitalGains(renterPortfolio, renterContributed, taxRate);
+    // G15: plusvalenza on a hypothetical sale at the end of this year.
+    const gainsTax = propertyGainsTaxAt(ctx, year);
 
     const wealthBuyHold = propertyValue - debtBalance + buyerPortfolio;
     const wealthBuyLiquidation =
-      propertyValue - debtBalance - sellingCosts + recoveredBuy + buyerNet;
+      propertyValue - debtBalance - sellingCosts + recoveredBuy + buyerNet - gainsTax;
     const wealthRentHold = renterPortfolio + recoveredRent;
     const wealthRentLiquidation = renterNet + recoveredRent;
 
@@ -206,12 +214,13 @@ function buildCompositions(
   const recoveredBuy = recoverablePaidThrough(ctx.buyCosts.oneTime, ctx.months);
   const recoveredRent = recoverablePaidThrough(ctx.rentCosts.oneTime, ctx.months);
   const taxRate = ctx.assumptions.capitalGainsTax;
+  const gainsTax = propertyGainsTaxAt(ctx, last.year);
 
   // Net portfolios via the liquidation identity, so each breakdown sums to
   // its liquidation wealth exactly.
   const buyerPortfolioNet =
     last.wealthBuyLiquidation -
-    (last.propertyValue - last.debtBalance - sellingCosts + recoveredBuy);
+    (last.propertyValue - last.debtBalance - sellingCosts + recoveredBuy - gainsTax);
   const renterPortfolioNet = last.wealthRentLiquidation - recoveredRent;
 
   const buyItems: LineItem[] = [
@@ -233,6 +242,21 @@ function buildCompositions(
         recoveredBuy,
         "wealth.recoveredCapital",
         {},
+      ),
+    );
+  }
+  if (gainsTax !== 0) {
+    buyItems.push(
+      wealthItem(
+        "wealth.buy.propertyGainsTax",
+        "Capital-gains tax on the property (sold <5y, non-primary)",
+        -gainsTax,
+        "wealth.propertyGainsTax",
+        {
+          year: last.year,
+          rate: ctx.config.propertyCapitalGains.rate,
+          withinYears: ctx.config.propertyCapitalGains.withinYears,
+        },
       ),
     );
   }

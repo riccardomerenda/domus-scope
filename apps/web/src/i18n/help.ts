@@ -23,6 +23,7 @@ export const HELP_GROUPS = {
     "equivalentRent",
     "currentRent",
     "horizon",
+    "primaryResidence",
     "financingKind",
     "downPayment",
     "rateTAN",
@@ -145,6 +146,14 @@ const en: Record<HelpTopicId, HelpEntry> = {
     what: "How the purchase is funded. Cash removes interest but ties up the whole price.",
     why: "Cash is not free (BR-014): the opportunity cost of the full capital replaces the bank's interest.",
     pitfall: "With decent alternative returns, cash can cost more than a cheap mortgage.",
+  },
+  primaryResidence: {
+    title: "Primary residence",
+    what: "Whether this home would be your abitazione principale for tax purposes.",
+    why: "It drives three Italian tax effects at once: the 19% mortgage-interest deduction (primary only), the capital-gains tax on a sale within 5 years (non-primary only), and which purchase-tax preset applies (2% vs 9% registration, plus IMU for second homes).",
+    pitfall:
+      "A second home sold early can owe 26% on the gain — the liquidation curve shows it in years 1–4.",
+    direction: "Primary → favors buying (deductions, no IMU, no plusvalenza).",
   },
   downPayment: {
     title: "Down payment",
@@ -419,6 +428,14 @@ const it: Record<HelpTopicId, HelpEntry> = {
     why: "I costi una tantum si spalmano su di esso; i break-even contano solo se ci cadono dentro.",
     typical: "5 / 10 / 20 / 30 anni. Sotto i 3 anni i costi una tantum dominano.",
     direction: "Più lungo → favorisce l'acquisto (i costi una tantum si ammortizzano).",
+  },
+  primaryResidence: {
+    title: "Abitazione principale",
+    what: "Se questa casa sarebbe la tua abitazione principale ai fini fiscali.",
+    why: "Guida tre effetti fiscali italiani insieme: la detrazione 19% sugli interessi del mutuo (solo prima casa), la plusvalenza tassata se vendi entro 5 anni (solo non prima casa), e quale preset di imposte d'acquisto si applica (registro 2% vs 9%, più IMU per le seconde case).",
+    pitfall:
+      "Una seconda casa venduta presto può dover il 26% sul guadagno — la curva di liquidazione lo mostra negli anni 1–4.",
+    direction: "Prima casa → favorisce l'acquisto (detrazioni, niente IMU, niente plusvalenza).",
   },
   financingKind: {
     title: "Mutuo o contanti",

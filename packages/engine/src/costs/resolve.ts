@@ -26,6 +26,8 @@ export interface OneTimeEvent {
   unrecoverable: number;
   /** Signed share returned at liquidation (deposit, renovation value). */
   recoverable: number;
+  /** G14: eligible for the renovation tax credit. */
+  renovationCredit: boolean;
 }
 
 export interface RecurringSeries {
@@ -46,6 +48,8 @@ export interface CostResolutionContext {
   propertyValueStartOfYear(t: number): number;
   /** Annual rent for year t (t = 1 → base rent × 12). */
   annualRentAt(t: number): number;
+  /** Registry cadastral value; null when the user hasn't provided it. */
+  cadastralValue: number | null;
 }
 
 function recoverableShare(item: CostItem): number {
@@ -85,6 +89,7 @@ export function resolveCostItems(
         amount: signedAmount,
         unrecoverable: signedAmount - recoverable,
         recoverable,
+        renovationCredit: item.renovationCredit === true,
       });
       continue;
     }
@@ -114,6 +119,10 @@ export function resolveCostItems(
           break;
         case "percentOfRent":
           amount = base.rate * ctx.annualRentAt(year);
+          break;
+        case "percentOfCadastral":
+          // No cadastral value entered → 0; the UI nudges the user to fill it.
+          amount = base.rate * (ctx.cadastralValue ?? 0);
           break;
       }
       annual.push(signFactor * amount);

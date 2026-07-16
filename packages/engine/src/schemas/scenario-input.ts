@@ -15,6 +15,12 @@ export const propertySchema = z.object({
   marketValue: positiveMoney.optional(),
   /** Basis for Italian registration tax on existing homes (G1). */
   cadastralValue: money.optional(),
+  /**
+   * Abitazione principale (G13): gates the mortgage-interest deduction,
+   * exempts the <5-year capital-gains tax on sale, and selects which
+   * purchase-tax preset regime applies. Default: true.
+   */
+  primaryResidence: z.boolean().default(true),
   zone: z.string().default(""),
   sizeSqm: z.number().positive().optional(),
   notes: z.string().default(""),

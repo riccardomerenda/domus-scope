@@ -125,6 +125,7 @@ export const it: Record<MessageKey, string> = {
   "costItem.it-buyer-agency": "Agenzia (acquirente)",
   "costItem.it-bank-fees": "Spese bancarie (istruttoria, perizia)",
   "costItem.it-renovation": "Ristrutturazione",
+  "costItem.it-imu": "IMU (seconda casa)",
   "costItem.it-condo-fees": "Spese condominiali (quota proprietario)",
   "costItem.it-home-insurance": "Assicurazione casa + vita mutuo",
   "costItem.it-rent-deposit": "Deposito cauzionale",
@@ -235,6 +236,7 @@ export const it: Record<MessageKey, string> = {
   "inputs.paymentLine": "Mutuo {amount} · LTV {ltv} · rata ≈ {payment}/mese (piano esatto)",
   "inputs.cashNote":
     "L'intero prezzo è pagato subito: niente interessi, ma tutto il capitale porta costo opportunità.",
+  "inputs.primaryResidence": "Abitazione principale (prima casa)",
   "inputs.ratePath": "Percorso del tasso (mutuo variabile)",
   "inputs.ratePathHint":
     "Vuoto = tasso fisso. Ogni variazione ri-ammortizza il debito residuo da quell'anno in poi — modella gli scenari Euribor come gradini espliciti.",
@@ -299,6 +301,7 @@ export const it: Record<MessageKey, string> = {
   "costs.desc.fixedPerYear": "{amount}/anno",
   "costs.desc.percentOfValue": "{rate} del valore dell'immobile/anno",
   "costs.desc.percentOfRent": "{rate} dell'affitto annuo",
+  "costs.desc.percentOfCadastral": "{rate} del valore catastale / anno",
   "costs.desc.growingAt": ", cresce del {rate}/anno",
   "costs.desc.tracksValue": ", segue il valore dell'immobile",
   "costs.desc.tracksRent": ", segue l'affitto",
@@ -329,6 +332,9 @@ export const it: Record<MessageKey, string> = {
   "costs.dialog.growthRate": "Tasso di crescita / anno",
   "costs.dialog.percentValuePerYear": "% del valore / anno",
   "costs.dialog.percentAnnualRent": "% dell'affitto annuo",
+  "costs.dialog.percentCadastral": "% del valore catastale",
+  "costs.dialog.percentCadastralPerYear": "% del valore catastale / anno",
+  "costs.dialog.renovationCredit": "Idoneo alla detrazione ristrutturazione (50% in 10 anni)",
   "costs.dialog.recoverability": "Recuperabilità",
   "costs.dialog.recoverNone": "Nessuna — puro costo",
   "costs.dialog.recoverFull": "Totale — restituito (cauzione)",

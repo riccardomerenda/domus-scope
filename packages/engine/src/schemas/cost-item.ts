@@ -11,6 +11,8 @@ export const costBaseSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("fixedAnnual"), amount: money }),
   z.object({ kind: z.literal("percentOfValue"), rate: nonNegativeRate }),
   z.object({ kind: z.literal("percentOfRent"), rate: nonNegativeRate }),
+  /** G13: resolves against the property's cadastral value (e.g. IMU); 0 if unset. */
+  z.object({ kind: z.literal("percentOfCadastral"), rate: nonNegativeRate }),
 ]);
 
 export const costGrowthSchema = z.discriminatedUnion("kind", [
@@ -45,6 +47,11 @@ export const costItemSchema = z.object({
   recoverability: recoverabilitySchema,
   /** "credit" models negative costs such as tax deductions (G4). */
   sign: z.enum(["cost", "credit"]),
+  /**
+   * G14: marks a one-time buy-side work eligible for the renovation tax
+   * credit (detrazione ristrutturazione). Absent = not eligible.
+   */
+  renovationCredit: z.boolean().optional(),
   enabled: z.boolean().default(true),
   notes: z.string().default(""),
 });
